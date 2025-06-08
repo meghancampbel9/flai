@@ -5,10 +5,27 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", ".expo/**"]
+    },
+    "build:mobile": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".expo/**", "dist/**"]
+    },
+    "build:api": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "**/*.py"],
+      "outputs": ["dist/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
+    },
+    "lint:mobile": {
+      "dependsOn": ["^lint"]
+    },
+    "lint:api": {
+      "dependsOn": ["^lint"],
+      "inputs": ["**/*.py"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
@@ -16,6 +33,18 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "dev:mobile": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:api": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "**/*.test.*", "**/*.spec.*"]
     }
   }
 }

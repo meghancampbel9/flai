@@ -1,0 +1,43 @@
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "dev": "expo start",
+    "dev:mobile": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build": "expo export",
+    "build:mobile": "expo export"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@flai/shared-types": "workspace:*",
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@supabase/supabase-js": "^2.50.0",
+    "expo": "~53.0.10",
+    "expo-av": "~15.1.5",
+    "expo-blur": "^14.1.5",
+    "expo-font": "^13.3.1",
+    "expo-linear-gradient": "^14.1.5",
+    "expo-router": "^5.0.7",
+    "expo-status-bar": "~2.2.3",
+    "expo-video": "~2.2.0",
+    "react": "19.0.0",
+    "react-native": "0.79.3",
+    "react-native-safe-area-context": "^5.4.0",
+    "react-native-url-polyfill": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.2.0",
+    "@types/react": "~19.0.10",
+    "@types/react-native": "^0.73.0",
+    "jest-expo": "^53.0.7",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}

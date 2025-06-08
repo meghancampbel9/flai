@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (for local development if not using Supabase)
+  postgres:
+    image: postgres:15-alpine
+    container_name: flai-postgres
+    environment:
+      POSTGRES_DB: flai_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - flai-network
+
+  # Redis for caching and background tasks
+  redis:
+    image: redis:7-alpine
+    container_name: flai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - flai-network
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: flai-api
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/flai_dev
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api:/app
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - flai-network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  flai-network:
+    driver: bridge 

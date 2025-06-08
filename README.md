@@ -1,84 +1,232 @@
-# Turborepo starter
+# 🛍️ Flai - AI-Powered Ecommerce Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+An intelligent ecommerce platform built with React Native Expo and FastAPI, featuring AI-powered visual search, smart recommendations, and automated product discovery.
 
-## Using this example
+## 🏗️ Architecture
 
-Run the following command:
+- **Frontend**: React Native Expo (iOS & Android)
+- **Backend**: Python FastAPI with async support
+- **Database**: Supabase (PostgreSQL) with pgvector for embeddings
+- **AI/ML**: Google Gemini Vision API for image processing
+- **Web Scraping**: Firecrawl for automated product discovery
+- **Monorepo**: Turborepo with PNPM workspaces
 
-```sh
-npx create-turbo@latest
-```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## 📁 Project Structure
 
 ```
-cd my-turborepo
-pnpm build
+flai/
+├── 📱 apps/
+│   ├── mobile/          # React Native Expo app
+│   └── api/             # Python FastAPI backend
+├── 📚 packages/
+│   ├── shared-types/    # Shared TypeScript definitions
+│   ├── ui/              # Shared UI components
+│   ├── eslint-config/   # ESLint configuration
+│   └── typescript-config/ # TypeScript configuration
+├── docker-compose.yml   # Local development services
+└── turbo.json          # Turborepo configuration
 ```
 
-### Develop
+## 🚀 Quick Start
 
-To develop all apps and packages, run the following command:
+### Prerequisites
 
+- Node.js 18+ and PNPM
+- Python 3.11+
+- Docker and Docker Compose
+- Expo CLI (`npm install -g @expo/cli`)
+
+### 1. Install Dependencies
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Install Python dependencies for API
+cd apps/api
+pip install -r requirements.txt
+cd ../..
 ```
-cd my-turborepo
+
+### 2. Environment Setup
+
+Create environment files (these are blocked by .gitignore for security):
+
+**Root `.env`:**
+```bash
+# Database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flai_dev
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# AI Services
+GOOGLE_API_KEY=your_gemini_api_key
+OPENAI_API_KEY=your_openai_api_key
+
+# Web Scraping
+FIRECRAWL_API_KEY=your_firecrawl_api_key
+
+# JWT
+JWT_SECRET_KEY=your_jwt_secret_key
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=30
+```
+
+**Mobile app `.env` (apps/mobile/.env):**
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:8000
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 3. Start Development Services
+
+```bash
+# Start database and Redis
+docker-compose up -d postgres redis
+
+# Start the entire development environment
 pnpm dev
+
+# Or start services individually:
+pnpm dev:mobile    # React Native Expo
+pnpm dev:api       # FastAPI backend
 ```
 
-### Remote Caching
+### 4. Access Applications
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- **Mobile App**: Expo Go app or web browser at `http://localhost:8081`
+- **API Documentation**: `http://localhost:8000/docs`
+- **API Health Check**: `http://localhost:8000/health`
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## 🛠️ Development Commands
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+```bash
+# Development
+pnpm dev              # Start all apps
+pnpm dev:mobile       # Start mobile app only
+pnpm dev:api          # Start API only
 
+# Building
+pnpm build            # Build all apps
+pnpm build:mobile     # Build mobile app
+pnpm build:api        # Build API
+
+# Linting & Type Checking
+pnpm lint             # Lint all code
+pnpm check-types      # Type check all TypeScript
+pnpm format           # Format code with Prettier
+
+# Testing
+pnpm test             # Run all tests
+
+# Mobile specific
+pnpm mobile           # Start Expo development server
+cd apps/mobile && npx expo run:ios     # Run on iOS simulator
+cd apps/mobile && npx expo run:android # Run on Android emulator
+
+# API specific
+pnpm api              # Start FastAPI server directly
+cd apps/api && python main.py         # Alternative way to start API
 ```
-cd my-turborepo
-npx turbo login
+
+## 🔧 Technology Stack
+
+### Frontend (React Native Expo)
+- **Framework**: Expo SDK 50+
+- **Navigation**: Expo Router
+- **UI**: Expo UI Kit + TailwindCSS (NativeWind)
+- **State Management**: Zustand
+- **HTTP Client**: Axios
+- **Image Processing**: Expo Image Picker
+
+### Backend (Python FastAPI)
+- **Framework**: FastAPI with async/await
+- **Database**: SQLAlchemy with async support
+- **Authentication**: JWT with Supabase Auth
+- **AI/ML**: Google Gemini Vision, scikit-learn
+- **Web Scraping**: Firecrawl API
+- **Background Tasks**: Celery + Redis
+
+### Database & Storage
+- **Primary DB**: Supabase (PostgreSQL)
+- **Vector Store**: pgvector for embeddings
+- **File Storage**: Supabase Storage
+- **Caching**: Redis
+
+## 🤖 AI Features
+
+- **Visual Search**: Upload images to find similar products
+- **Smart Recommendations**: ML-powered product suggestions
+- **Auto Categorization**: AI-powered product classification
+- **Web Scraping**: Automated product discovery from e-commerce sites
+
+## 🚢 Deployment
+
+### Mobile App
+```bash
+# Build for production
+cd apps/mobile
+npx expo build:ios     # iOS App Store
+npx expo build:android # Google Play Store
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### API Backend
+```bash
+# Build Docker image
+docker build -t flai-api ./apps/api
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
+# Deploy to cloud provider
+# (Add specific deployment instructions for your chosen platform)
 ```
-npx turbo link
+
+## 📚 API Documentation
+
+Once the API is running, visit:
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**PNPM installation fails:**
+```bash
+npm install -g pnpm
 ```
 
-## Useful Links
+**Expo app won't start:**
+```bash
+cd apps/mobile
+npx expo install --fix
+```
 
-Learn more about the power of Turborepo:
+**Python dependencies fail:**
+```bash
+cd apps/api
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+**Database connection issues:**
+```bash
+docker-compose down
+docker-compose up -d postgres
+```
+
+For more help, check the [docs](./docs) folder or open an issue.
