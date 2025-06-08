@@ -1,16 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { phoneAuth } from './supabase';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
+import { AuthContextType, AuthProviderProps, Session } from '../types';
+import { authService } from '../services/authService';
 
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  signOut: () => Promise<void>;
-  setDevModeAuth: () => void;
-}
-
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
@@ -18,20 +10,9 @@ const AuthContext = createContext<AuthContextType>({
   setDevModeAuth: () => {},
 });
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   console.log('🔄 AuthProvider render - session:', session?.user?.id, 'loading:', loading);
@@ -42,7 +23,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let isMounted = true;
     
     // Get initial session
-    phoneAuth.getSession().then(({ session }) => {
+    authService.getSession().then(({ session }) => {
       if (!isMounted) return;
       console.log('📱 Initial session:', session?.user?.id);
       setSession(session);
@@ -51,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = phoneAuth.onAuthStateChange(
+    const { data: { subscription } } = authService.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
         console.log('🔔 Auth state change event:', event, 'session:', session?.user?.id);
@@ -85,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🚪 Dev mode: State cleared - root layout will handle navigation');
     } else {
       // Regular Supabase sign out
-      await phoneAuth.signOut();
+      await authService.signOut();
     }
     
     console.log('🚪 SignOut completed');

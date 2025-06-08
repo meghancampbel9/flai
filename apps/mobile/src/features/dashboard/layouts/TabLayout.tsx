@@ -1,17 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../lib/auth-context';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
-export default function TabLayout() {
-  const { session } = useAuth();
-
-  // The redirect in the root layout should prevent this from being rendered
-  // without a session, but as a fallback, we can return null to prevent
-  // child screens from rendering with invalid data before the redirect completes.
-  if (!session) {
-    return null;
-  }
-
+export const TabLayout: React.FC = () => {
   return (
     <Tabs
       screenOptions={{
@@ -63,4 +54,4 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-} 
+}; 

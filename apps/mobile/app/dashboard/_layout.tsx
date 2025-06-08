@@ -1,0 +1,1 @@
+export { TabLayout as default } from '@/features/dashboard/layouts/TabLayout'; 
