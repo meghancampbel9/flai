@@ -97,10 +97,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🚪 Dev mode sign out - clearing state manually');
       setSession(null);
       setUser(null);
-      console.log('🚪 Dev mode: State cleared - root layout will handle navigation');
+      setOnboardingCompleted(false);
     } else {
-      // Regular Supabase sign out
       await authService.signOut();
+      setSession(null);
+      setUser(null);
+      setOnboardingCompleted(false);
     }
     console.log('🚪 SignOut completed');
   }, [session]);

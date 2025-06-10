@@ -7,7 +7,7 @@ export const spacing = {
   xl: 20,
   xxl: 24,
   xxxl: 32,
-  xxxxl: 40,
+  xxxxl: 30,
   xxxxxl: 60,
   
   // Common paddings from existing screens

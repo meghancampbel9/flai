@@ -226,11 +226,11 @@ export const PinterestScreen: React.FC = () => {
       <KeyboardAvoidingView 
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 100}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView 
           style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing.xxxxl }}
+          contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -242,57 +242,57 @@ export const PinterestScreen: React.FC = () => {
           </View>
 
           {/* Content */}
-          <View style={[componentStyles.content, { paddingTop: spacing.xl, flex: 1 }]}>
-            <Text style={componentStyles.screenTitle}>What inspires your style?</Text>
-            
-            <Text style={componentStyles.screenSubtitle}>
-              Share a Pinterest board that captures your aesthetic. We'll use it to curate personalized recommendations just for you.
-            </Text>
+          <View style={{ flex: 1 }}>
+            <View style={[componentStyles.content, { paddingTop: spacing.md }]}>
+              <Text style={componentStyles.screenTitle}>What inspires your style?</Text>
+              
+              <Text style={[componentStyles.screenSubtitle, { marginBottom: spacing.lg }]}>
+                Share a Pinterest board that captures your aesthetic. We'll use it to curate personalized recommendations just for you.
+              </Text>
 
-            {/* Pinterest URL Input */}
-            <View style={authStyles.pinterestInputContainer}>
-              <Ionicons 
-                name="logo-pinterest" 
-                size={24} 
-                color={colors.error} 
-                style={authStyles.pinterestIcon} 
-              />
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Text style={[authStyles.urlPrefix, { color: colors.textSecondary }]}>
-                  pinterest.com/
-                </Text>
-                <TextInput
-                  style={[
-                    authStyles.pinterestInput,
-                    { borderColor: error ? colors.error : colors.border, flex: 1, paddingLeft: 0 }
-                  ]}
-                  value={userInput}
-                  onChangeText={handleInputChange}
-                  placeholder="username/boardname"
-                  placeholderTextColor={colors.textMuted}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="default"
-                  editable={!isLoading}
-                  autoFocus={true}
+              {/* Pinterest URL Input */}
+              <View style={authStyles.pinterestInputContainer}>
+                <Ionicons 
+                  name="logo-pinterest" 
+                  size={24} 
+                  color={colors.error} 
+                  style={authStyles.pinterestIcon} 
                 />
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                  <Text style={[authStyles.urlPrefix, { color: colors.textSecondary }]}>
+                    pinterest.com/
+                  </Text>
+                  <TextInput
+                    style={[
+                      authStyles.pinterestInput,
+                      { borderColor: error ? colors.error : colors.border, flex: 1, paddingLeft: 0 }
+                    ]}
+                    value={userInput}
+                    onChangeText={handleInputChange}
+                    placeholder="username/boardname"
+                    placeholderTextColor={colors.textMuted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="default"
+                    editable={!isLoading}
+                    autoFocus={true}
+                  />
+                </View>
               </View>
-            </View>
 
-            {/* Error Message */}
-            {error && (
-              <Text style={authStyles.pinterestError}>{error}</Text>
-            )}
+              {/* Error Message */}
+              {error && (
+                <Text style={authStyles.pinterestError}>{error}</Text>
+              )}
+            </View>
           </View>
 
-          {/* Bottom Section with Buttons */}
-          <View style={[componentStyles.bottomSection, { marginTop: 'auto', paddingBottom: spacing.lg }]}>
+          {/* Bottom Section with Buttons - Fixed at bottom */}
+          <View style={[componentStyles.bottomSection, { paddingTop: spacing.lg }]}>
             <Button
               title={
                 isAnalyzing ? 'Analyzing your style...' : 
-                isLoading ? 'Saving...' : 
-                (userInput.trim() && !styleAnalysis) ? 'Analyze & Continue' :
-                'Continue'
+                isLoading ? 'Saving...' : 'Continue'
               }
               onPress={handleContinue}
               disabled={isLoading || isAnalyzing || (!!userInput.trim() && !!error)}

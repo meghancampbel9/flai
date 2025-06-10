@@ -1,0 +1,1 @@
+export { AccountSettingsScreen as default } from '@/features/dashboard/components/AccountSettingsScreen'; 

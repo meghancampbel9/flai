@@ -1,51 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, Alert, PressableStateCallbackType, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Image, Alert, Share, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { userService, UserProfile, StylePreference } from '@/features/auth/services/userService';
-import { pinterestService } from '@/features/auth/services/pinterestService';
-import { componentStyles, colors, typography, spacing } from '@/styles';
+import { userService, UserProfile } from '@/features/auth/services/userService';
+import { colors, typography, spacing } from '@/styles';
 import { dashboardStyles } from '../styles';
-import { authStyles } from '@/features/auth/styles';
+
+type TabType = 'closet' | 'wishlist';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [stylePreferences, setStylePreferences] = useState<StylePreference[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isEditingPinterest, setIsEditingPinterest] = useState(false);
-  const [newPinterestUrl, setNewPinterestUrl] = useState('');
-  const [isUpdatingPinterest, setIsUpdatingPinterest] = useState(false);
-  const [pinterestError, setPinterestError] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('closet');
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
-  // Fetch user profile and style preferences
+  // Mock data for now - replace with actual data later
+  const [closetItems] = useState([]);
+  const [wishlistItems] = useState([]);
+
+  // Fetch user profile
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user?.id) return;
       
       try {
         setLoading(true);
-        console.log('📡 Fetching user profile and style preferences...');
         const profile = await userService.getUserProfile(user.id);
         setUserProfile(profile);
-        console.log('✅ User profile fetched:', profile.username);
-        
-        // Fetch style preferences if user has completed onboarding
-        if (profile.onboarding_completed) {
-          try {
-            const preferences = await userService.getUserStylePreferences(user.id);
-            setStylePreferences(preferences);
-            console.log('✅ Style preferences fetched:', preferences.length, 'preferences');
-          } catch (error) {
-            console.log('ℹ️ No style preferences found (this is normal for new users)');
-            setStylePreferences([]);
-          }
-        }
-        
       } catch (error) {
-        console.error('❌ Error fetching user data:', error);
         Alert.alert('Error', 'Failed to load profile data. Please try again.');
       } finally {
         setLoading(false);
@@ -75,117 +60,164 @@ export const ProfileScreen: React.FC = () => {
     );
   };
 
-  const validatePinterestUrl = (url: string): boolean => {
-    if (!url.trim()) {
-      setPinterestError('Please enter a Pinterest board URL');
-      return false;
-    }
-    const trimmed = url.trim();
-    // Allow both full URLs and username/boardname format
-    const userBoardRegex = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\/?$/;
-    const fullUrlRegex = /^https?:\/\/(www\.)?(pinterest\.(com|ca|co\.uk|fr|de|es|it|jp|au)|pin\.it)\/[a-zA-Z0-9_\/-]+$/;
-    if (!userBoardRegex.test(trimmed) && !fullUrlRegex.test(trimmed)) {
-      if (trimmed.includes('/')) {
-        setPinterestError('Format should be: username/boardname or full Pinterest URL');
-      } else {
-        setPinterestError('Please include both username and board name: username/boardname');
-      }
-      return false;
-    }
-    setPinterestError('');
-    return true;
+  const handleSettingsPress = () => {
+    setShowSettingsMenu(!showSettingsMenu);
   };
 
-  const constructPinterestUrl = (input: string): string => {
-    const trimmed = input.trim();
-    if (!trimmed) return '';
-    // If user enters full URL, use as-is
-    if (trimmed.startsWith('http')) {
-      return trimmed;
+  const handleCloseSettingsMenu = () => {
+    if (showSettingsMenu) {
+      setShowSettingsMenu(false);
     }
-    // Otherwise, prepend pinterest.com/
-    return `https://pinterest.com/${trimmed}`;
   };
 
-  const handleEditPinterest = () => {
-    if (userProfile?.pinterest_board_analyzed) {
-      // Pre-fill with current board URL, but make it user-friendly
-      const currentUrl = userProfile.pinterest_board_analyzed;
-      if (currentUrl.startsWith('https://pinterest.com/')) {
-        // Convert full URL back to username/boardname format for easier editing
-        const pathMatch = currentUrl.match(/pinterest\.com[^/]*\/([^/]+\/[^/?]+)/);
-        setNewPinterestUrl(pathMatch ? pathMatch[1] : currentUrl);
-      } else {
-        setNewPinterestUrl(currentUrl);
-      }
-    } else {
-      setNewPinterestUrl('');
-    }
-    setIsEditingPinterest(true);
-    setPinterestError('');
+  const handleEditProfile = () => {
+    router.push('/edit-profile');
   };
 
-  const handleCancelEdit = () => {
-    setIsEditingPinterest(false);
-    setNewPinterestUrl('');
-    setPinterestError('');
-  };
-
-  const handleUpdatePinterest = async () => {
-    if (!user?.id || !newPinterestUrl.trim()) return;
-    if (!validatePinterestUrl(newPinterestUrl)) {
-      return;
-    }
-    setIsUpdatingPinterest(true);
+  const handleShareProfile = async () => {
     try {
-      const fullUrl = constructPinterestUrl(newPinterestUrl);
-      console.log('📌 Updating Pinterest board to:', fullUrl);
-      
-      // First, analyze the new board
-      console.log('🎨 Analyzing new Pinterest board...');
-      const analysisResult = await pinterestService.analyzeBoard(fullUrl, user.id);
-      
-      if (!analysisResult.success) {
-        Alert.alert('Analysis Failed', analysisResult.message || 'Failed to analyze the Pinterest board. Please check the URL and try again.');
-        return;
-      }
-      
-      // If analysis succeeded, update the user profile
-      console.log('💾 Updating user profile with new Pinterest board...');
-      await userService.updatePinterestBoard(user.id, fullUrl);
-      
-      // Refresh user data to show updated information
-      const updatedProfile = await userService.getUserProfile(user.id);
-      setUserProfile(updatedProfile);
-      
-      // Refresh style preferences
-      const updatedPreferences = await userService.getUserStylePreferences(user.id);
-      setStylePreferences(updatedPreferences);
-      
-      setIsEditingPinterest(false);
-      setNewPinterestUrl('');
-      setPinterestError('');
-      
-      Alert.alert(
-        'Success!', 
-        'Your Pinterest board has been updated and re-analyzed. Your new style preferences are now available!',
-        [{ text: 'OK' }]
-      );
-      
+      const shareContent = {
+        message: `Check out ${userProfile?.display_name || userProfile?.username || 'this'}'s profile on FLAI!`,
+        url: `https://flai.app/profile/${userProfile?.username}`, // TODO: Replace with actual app URL
+      };
+
+      await Share.share(shareContent);
     } catch (error) {
-      console.error('❌ Error updating Pinterest board:', error);
-      Alert.alert('Error', 'Failed to update Pinterest board. Please try again.');
-    } finally {
-      setIsUpdatingPinterest(false);
+      Alert.alert('Error', 'Failed to share profile. Please try again.');
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
+  const renderHeader = () => (
+    <View style={dashboardStyles.profileHeaderContainer}>
+      {/* Top Bar with Settings */}
+      <View style={dashboardStyles.profileTopBar}>
+        <Text style={dashboardStyles.profileUsername}>
+          {userProfile?.username || 'Username'}
+        </Text>
+        <TouchableOpacity onPress={handleSettingsPress} style={dashboardStyles.settingsButton}>
+          <Ionicons name="ellipsis-horizontal" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Profile Info Section */}
+      <View style={dashboardStyles.profileInfoSection}>
+        {/* Profile Picture and Stats */}
+        <View style={dashboardStyles.profileStatsRow}>
+          {/* Profile Picture */}
+          <View style={dashboardStyles.profilePictureContainer}>
+            {userProfile?.avatar_url ? (
+              <Image 
+                source={{ uri: userProfile.avatar_url }} 
+                style={dashboardStyles.profilePicture}
+              />
+            ) : (
+              <View style={dashboardStyles.profilePicturePlaceholder}>
+                <Ionicons name="person" size={40} color={colors.textSecondary} />
+              </View>
+            )}
+          </View>
+
+          {/* Stats */}
+          <View style={dashboardStyles.statsContainer}>
+            <View style={dashboardStyles.statItem}>
+              <Text style={dashboardStyles.statNumber}>{closetItems.length}</Text>
+              <Text style={dashboardStyles.statLabel}>Items</Text>
+            </View>
+            <View style={dashboardStyles.statItem}>
+              <Text style={dashboardStyles.statNumber}>0</Text>
+              <Text style={dashboardStyles.statLabel}>Following</Text>
+            </View>
+            <View style={dashboardStyles.statItem}>
+              <Text style={dashboardStyles.statNumber}>0</Text>
+              <Text style={dashboardStyles.statLabel}>Followers</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Display Name and Bio */}
+        <View style={dashboardStyles.profileTextInfo}>
+          {userProfile?.display_name && (
+            <Text style={dashboardStyles.displayName}>{userProfile.display_name}</Text>
+          )}
+          {userProfile?.bio && (
+            <Text style={dashboardStyles.bio}>{userProfile.bio}</Text>
+          )}
+        </View>
+
+        {/* Action Buttons */}
+        <View style={dashboardStyles.actionButtons}>
+          <TouchableOpacity style={dashboardStyles.editButton} onPress={handleEditProfile}>
+            <Text style={dashboardStyles.editButtonText}>Edit profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={dashboardStyles.shareButton} onPress={handleShareProfile}>
+            <Text style={dashboardStyles.shareButtonText}>Share profile</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderTabs = () => (
+    <View style={dashboardStyles.tabContainer}>
+      <TouchableOpacity
+        style={[dashboardStyles.tab, activeTab === 'closet' && dashboardStyles.activeTab]}
+        onPress={() => setActiveTab('closet')}
+      >
+        <Ionicons 
+          name="grid-outline" 
+          size={24} 
+          color={activeTab === 'closet' ? colors.text : colors.textSecondary} 
+        />
+        <Text style={[
+          dashboardStyles.tabText, 
+          activeTab === 'closet' && dashboardStyles.activeTabText
+        ]}>
+          Closet
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[dashboardStyles.tab, activeTab === 'wishlist' && dashboardStyles.activeTab]}
+        onPress={() => setActiveTab('wishlist')}
+      >
+        <Ionicons 
+          name="heart-outline" 
+          size={24} 
+          color={activeTab === 'wishlist' ? colors.text : colors.textSecondary} 
+        />
+        <Text style={[
+          dashboardStyles.tabText, 
+          activeTab === 'wishlist' && dashboardStyles.activeTabText
+        ]}>
+          Wishlist
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderGrid = () => {
+    const items = activeTab === 'closet' ? closetItems : wishlistItems;
+    
+    if (items.length === 0) {
+      return (
+        <View style={dashboardStyles.emptyGridState}>
+          <Ionicons 
+            name={activeTab === 'closet' ? 'shirt-outline' : 'heart-outline'} 
+            size={60} 
+            color={colors.textSecondary} 
+          />
+          <Text style={dashboardStyles.emptyGridTitle}>
+            {activeTab === 'closet' ? 'No items in your closet' : 'No items in your wishlist'}
+          </Text>
+        </View>
+      );
     }
+
+    // TODO: Implement actual grid of items
+    return (
+      <View style={dashboardStyles.grid}>
+        {/* Grid items will go here */}
+      </View>
+    );
   };
 
   if (loading) {
@@ -203,119 +235,47 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={dashboardStyles.screenContainer}>
-      <ScrollView style={dashboardStyles.contentContainer} showsVerticalScrollIndicator={false}>
-        <Text style={dashboardStyles.sectionTitle}>Profile</Text>
-        
-        {userProfile && (
-          <>
-            {/* Basic Profile Info */}
-            <View style={dashboardStyles.card}>
-              <Text style={typography.caption}>Username:</Text>
-              <Text style={dashboardStyles.cardContent}>@{userProfile.username}</Text>
-              
-              {userProfile.display_name && (
-                <>
-                  <Text style={[typography.caption, { marginTop: spacing.md }]}>Display Name:</Text>
-                  <Text style={dashboardStyles.cardContent}>{userProfile.display_name}</Text>
-                </>
-              )}
-              <Text style={[typography.caption, { marginTop: spacing.md }]}>Phone:</Text>
-              <Text style={dashboardStyles.cardContent}>{user?.phone || 'Not available'}</Text>
-            </View>
-
-            {/* Pinterest Board Section */}
-            <View style={dashboardStyles.card}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={typography.caption}>Pinterest Board:</Text>
-                {userProfile.pinterest_board_analyzed && !isEditingPinterest && (
-                  <Pressable onPress={handleEditPinterest} style={{ padding: spacing.xs }}>
-                    <Ionicons name="pencil" size={18} color={colors.primary} />
-                  </Pressable>
-                )}
-              </View>
-              
-              {isEditingPinterest ? (
-                <View style={{ marginTop: spacing.sm }}>
-                  <View style={authStyles.pinterestInputContainer}>
-                    <Ionicons name="logo-pinterest" size={20} color={colors.error} style={authStyles.pinterestIcon} />
-                    <Text style={authStyles.urlPrefix}>pinterest.com/</Text>
-                    <TextInput
-                      style={authStyles.pinterestInput}
-                      value={newPinterestUrl}
-                      onChangeText={(text) => {
-                        setNewPinterestUrl(text);
-                        setPinterestError('');
-                      }}
-                      placeholder="username/boardname"
-                      placeholderTextColor={colors.textMuted}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                  
-                  {pinterestError ? (
-                    <Text style={authStyles.pinterestError}>
-                      {pinterestError}
-                    </Text>
-                  ) : null}
-                  
-                  <View style={{ flexDirection: 'row', marginTop: spacing.md, gap: spacing.sm }}>
-                    <Pressable
-                      style={[componentStyles.primaryButton, { flex: 1, backgroundColor: colors.backgroundSecondary }]}
-                      onPress={handleCancelEdit}
-                      disabled={isUpdatingPinterest}
-                    >
-                      <Text style={[componentStyles.primaryButtonText, { color: colors.text }]}>Cancel</Text>
-                    </Pressable>
-                    <Pressable
-                      style={[componentStyles.primaryButton, { flex: 1, opacity: isUpdatingPinterest ? 0.7 : 1 }]}
-                      onPress={handleUpdatePinterest}
-                      disabled={isUpdatingPinterest || !newPinterestUrl.trim()}
-                    >
-                      {isUpdatingPinterest ? (
-                        <ActivityIndicator size="small" color={colors.background} />
-                      ) : (
-                        <Text style={componentStyles.primaryButtonText}>Update</Text>
-                      )}
-                    </Pressable>
-                  </View>
-                </View>
-              ) : (
-                <View style={{ marginTop: spacing.sm }}>
-                  {userProfile.pinterest_board_analyzed ? (
-                    <Text style={dashboardStyles.cardContent}>{userProfile.pinterest_board_analyzed}</Text>
-                  ) : (
-                    <>
-                      <Text style={[dashboardStyles.cardContent, { color: colors.textSecondary, fontStyle: 'italic' }]}>
-                        No Pinterest board linked
-                      </Text>
-                      <Pressable
-                        style={[componentStyles.primaryButton, { marginTop: spacing.md, backgroundColor: colors.backgroundSecondary }]}
-                        onPress={handleEditPinterest}
-                      >
-                        <Text style={[componentStyles.primaryButtonText, { color: colors.text }]}>Add Pinterest Board</Text>
-                      </Pressable>
-                    </>
-                  )}
-                </View>
-              )}
-            </View>
-          </>
-        )}
-
-        <Pressable
-          style={({ pressed }: PressableStateCallbackType) => [
-            dashboardStyles.dangerButton,
-            pressed && dashboardStyles.dangerButtonPressed,
-            { marginTop: spacing.xl, marginBottom: spacing.xxl }
-          ]}
-          onPress={handleSignOut}
-        >
-          <Text style={dashboardStyles.dangerButtonText}>Sign Out</Text>
-        </Pressable>
+      <ScrollView style={dashboardStyles.profileContainer} showsVerticalScrollIndicator={false}>
+        {renderHeader()}
+        {renderTabs()}
+        {renderGrid()}
       </ScrollView>
+
+      {/* Settings Menu Modal */}
+      <Modal
+        visible={showSettingsMenu}
+        transparent
+        animationType="none"
+        onRequestClose={handleCloseSettingsMenu}
+      >
+        <Pressable 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.1)' }}
+          onPress={handleCloseSettingsMenu}
+        >
+          <View style={[dashboardStyles.settingsMenu, { top: 100, right: 20 }]}>
+            <TouchableOpacity 
+              style={dashboardStyles.settingsMenuItem}
+              onPress={() => {
+                router.push('/account-settings');
+                setShowSettingsMenu(false);
+              }}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.text} />
+              <Text style={dashboardStyles.settingsMenuText}>Account Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={dashboardStyles.settingsMenuItem}
+              onPress={() => {
+                handleSignOut();
+                setShowSettingsMenu(false);
+              }}
+            >
+              <Ionicons name="log-out-outline" size={20} color={colors.error} />
+              <Text style={[dashboardStyles.settingsMenuText, { color: colors.error }]}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
-};
-
- 
+}; 

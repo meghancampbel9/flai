@@ -1,3 +1,5 @@
+import { supabase } from '@/config/supabase';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export interface CreateUserProfileRequest {
@@ -239,6 +241,48 @@ export const userService = {
     } catch (error) {
       console.error('❌ Failed to fetch style preferences:', error);
       throw error;
+    }
+  },
+
+  async uploadProfileImage(userId: string, imageUri: string): Promise<string> {
+    try {
+      const response = await fetch(imageUri);
+      if (!response.ok) {
+        throw new Error(`Failed to read image file: ${response.status}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Generate unique filename with user folder structure
+      const fileExt = imageUri.split('.').pop() || 'jpg';
+      const fileName = `users/${userId}/avatar-${Date.now()}.${fileExt}`;
+      
+      // MIME types for images
+      const mimeType = fileExt === 'jpg' || fileExt === 'jpeg' ? 'image/jpeg' : 
+                      fileExt === 'png' ? 'image/png' :
+                      fileExt === 'webp' ? 'image/webp' : 'image/jpeg';
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, arrayBuffer, {
+          contentType: mimeType,
+          upsert: true,
+        });
+
+      if (error) {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      return publicUrlData.publicUrl;
+
+    } catch (error) {
+      console.error('❌ Failed to upload profile image:', error);
+      throw new Error('Failed to upload profile image. Please try again.');
     }
   },
 

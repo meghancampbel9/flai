@@ -6,7 +6,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -17,8 +17,7 @@ const { width, height } = Dimensions.get('window');
 
 export const LandingScreen: React.FC = () => {
   const { session, loading, onboardingCompleted } = useAuth();
-  
-  console.log('🏠 LandingPage render - session:', session?.user?.id, 'loading:', loading);
+  const pathname = usePathname();
   
   const player = useVideoPlayer(require('../../../../assets/flai-landing.mov'), (player) => {
     player.loop = true;
@@ -41,11 +40,16 @@ export const LandingScreen: React.FC = () => {
   }, [player]);
 
   useEffect(() => {
-    if (!loading && session && !onboardingCompleted) {
+    if (loading) return;
+    if (pathname.startsWith('/auth/')) return; 
+    if (session && onboardingCompleted) {
+      console.log('🏠 LandingPage - Authenticated user with completed onboarding, redirecting to dashboard');
+      router.replace('/dashboard');
+    } else if (session && onboardingCompleted === false) {
       console.log('🏠 LandingPage - Authenticated user needs to complete onboarding, redirecting to welcome');
       router.replace('/auth/welcome');
     }
-  }, [session, loading, onboardingCompleted]);
+  }, [session, loading, onboardingCompleted, pathname]);
 
   const handleGetStarted = () => {
     console.log('🏠 LandingPage - Get Started clicked');
@@ -54,7 +58,6 @@ export const LandingScreen: React.FC = () => {
 
   // Show loading while checking auth state
   if (loading) {
-    console.log('🏠 LandingPage showing loading');
     return (
       <SafeAreaView style={landingStyles.container}>
         <View style={landingStyles.loadingContainer}>
@@ -64,32 +67,7 @@ export const LandingScreen: React.FC = () => {
     );
   }
 
-  // If authenticated and onboarding completed, show "Go to App"
-  if (session && onboardingCompleted) {
-    console.log('🏠 LandingPage - Authenticated user with completed onboarding, showing go to app option');
-    return (
-      <SafeAreaView style={landingStyles.container}>
-        <View style={landingStyles.content}>
-          <View style={landingStyles.header}>
-            <Text style={landingStyles.brandName}>FLAI</Text>
-          </View>
-          <View style={landingStyles.heroContainer}>
-            <Text style={landingStyles.brandName}>Welcome back!</Text>
-            <Button
-              title="Go to App"
-              onPress={() => {
-                console.log('🏠 LandingPage - Go to App clicked');
-                router.push('/dashboard');
-              }}
-              size="large"
-            />
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
-  console.log('🏠 LandingPage showing normal landing page');
 
   return (
     <SafeAreaView style={landingStyles.container}>
@@ -122,13 +100,13 @@ export const LandingScreen: React.FC = () => {
             onPress={handleGetStarted}
             size="large"
           />
-          <Text style={[landingStyles.termsText, { transform: [{ translateY: 25 }] }]}>
-            By creating an account, you agree to our{' '}
-            <Text style={landingStyles.linkText}>Terms of Service</Text> and{' '}
-            <Text style={landingStyles.linkText}>Privacy Policy</Text>.
-          </Text>
         </View>
+        <Text style={landingStyles.termsText}>
+          By creating an account, you agree to our{' '}
+          <Text style={landingStyles.linkText}>Terms of Service</Text> and{' '}
+          <Text style={landingStyles.linkText}>Privacy Policy</Text>.
+        </Text>
       </View>
     </SafeAreaView>
   );
-}; 
+};

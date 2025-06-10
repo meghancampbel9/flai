@@ -85,6 +85,9 @@ export const landingStyles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+    maxWidth: 300,
+    alignSelf: 'center',
+    marginHorizontal: 10,
   },
   linkText: {
     color: colors.primary,
