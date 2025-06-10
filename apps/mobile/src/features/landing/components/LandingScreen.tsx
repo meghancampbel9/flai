@@ -16,7 +16,7 @@ import { Button } from '@/components';
 const { width, height } = Dimensions.get('window');
 
 export const LandingScreen: React.FC = () => {
-  const { session, loading } = useAuth();
+  const { session, loading, onboardingCompleted } = useAuth();
   
   console.log('🏠 LandingPage render - session:', session?.user?.id, 'loading:', loading);
   
@@ -40,6 +40,13 @@ export const LandingScreen: React.FC = () => {
     }
   }, [player]);
 
+  useEffect(() => {
+    if (!loading && session && !onboardingCompleted) {
+      console.log('🏠 LandingPage - Authenticated user needs to complete onboarding, redirecting to welcome');
+      router.replace('/auth/welcome');
+    }
+  }, [session, loading, onboardingCompleted]);
+
   const handleGetStarted = () => {
     console.log('🏠 LandingPage - Get Started clicked');
     router.push('/auth/phone');
@@ -57,9 +64,9 @@ export const LandingScreen: React.FC = () => {
     );
   }
 
-  // If authenticated, show a "Go to App" button instead of auto-redirecting
-  if (session) {
-    console.log('🏠 LandingPage - Authenticated user, showing go to app option');
+  // If authenticated and onboarding completed, show "Go to App"
+  if (session && onboardingCompleted) {
+    console.log('🏠 LandingPage - Authenticated user with completed onboarding, showing go to app option');
     return (
       <SafeAreaView style={landingStyles.container}>
         <View style={landingStyles.content}>
@@ -115,7 +122,6 @@ export const LandingScreen: React.FC = () => {
             onPress={handleGetStarted}
             size="large"
           />
-
           <Text style={[landingStyles.termsText, { transform: [{ translateY: 25 }] }]}>
             By creating an account, you agree to our{' '}
             <Text style={landingStyles.linkText}>Terms of Service</Text> and{' '}

@@ -1,32 +1,21 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '@/components';
-import { componentStyles, colors, typography, spacing } from '@/styles';
-import { useAuth } from '../hooks/useAuth';
+import { componentStyles, colors } from '@/styles';
 import { authStyles } from '../styles';
 
 export const WelcomeScreen: React.FC = () => {
   const { devMode } = useLocalSearchParams<{ devMode?: string }>();
-  const { setDevModeAuth } = useAuth();
-
-  useEffect(() => {
-    // Welcome screen no longer sets auth automatically
-    // Auth will be set when user clicks Continue
-    console.log('🔧 Welcome screen loaded, devMode:', devMode);
-  }, [devMode]);
 
   const handleContinue = () => {
-    // Set up authentication (real or mock) when user completes onboarding
-    if (devMode === 'true') {
-      console.log('🔧 Welcome screen: Setting up development mode authentication on continue');
-      setDevModeAuth();
-    }
-    
-    // Navigate to main app dashboard
-    router.replace('/dashboard');
+    console.log('🧭 Navigating to username screen');
+    router.push({
+      pathname: '/auth/username',
+      params: devMode ? { devMode } : {}
+    });
   };
 
   return (

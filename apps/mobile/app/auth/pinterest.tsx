@@ -1,0 +1,1 @@
+export { PinterestScreen as default } from '@/features/auth/components/PinterestScreen'; 

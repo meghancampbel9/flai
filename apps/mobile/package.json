@@ -13,6 +13,7 @@
     "build:mobile": "expo export"
   },
   "dependencies": {
+    "@expo/cli": "^0.24.14",
     "@expo/vector-icons": "^14.1.0",
     "@flai/shared-types": "workspace:*",
     "@react-native-async-storage/async-storage": "^2.1.2",

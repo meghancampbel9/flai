@@ -43,9 +43,11 @@ export interface Database {
 // User Types
 export interface User {
   id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
+  email?: string;
+  phone?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
   avatar?: string;
   createdAt: string;
   updatedAt: string;

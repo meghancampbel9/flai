@@ -4,8 +4,10 @@ export interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  onboardingCompleted: boolean;
   signOut: () => Promise<void>;
   setDevModeAuth: () => void;
+  markOnboardingCompleted: () => void;
 }
 
 export interface AuthProviderProps {

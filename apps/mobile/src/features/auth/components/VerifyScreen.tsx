@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components';
 import { componentStyles, colors, typography, spacing } from '@/styles';
 import { authService } from '../services/authService';
-import { useAuth } from '../hooks/useAuth';
 import { authStyles } from '../styles';
 
 export const VerifyScreen: React.FC = () => {
@@ -15,7 +14,6 @@ export const VerifyScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const hiddenInputRef = useRef<TextInput>(null);
-  const { setDevModeAuth } = useAuth();
 
   const handleVerify = async (verificationCode: string) => {
     console.log('🔍 handleVerify called with code:', verificationCode);

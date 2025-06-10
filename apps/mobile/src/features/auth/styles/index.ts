@@ -2,7 +2,6 @@ import { StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '@/styles';
 
 export const authStyles = StyleSheet.create({
-  // OTP Input styles
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -136,5 +135,176 @@ export const authStyles = StyleSheet.create({
     ...typography.h1,
     textAlign: 'center',
     marginBottom: spacing.md,
+  },
+
+  usernameInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    borderWidth: 1,
+    borderRadius: spacing.borderRadius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.xxxl,
+    marginBottom: spacing.md,
+    backgroundColor: colors.background,
+    height: 50,
+  },
+  usernamePrefix: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    marginRight: spacing.xs,
+  },
+  usernameInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    padding: 0,
+    margin: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+  },
+  usernameStatusIcon: {
+    marginLeft: spacing.xs,
+    width: 24,
+    alignItems: 'center',
+  },
+  usernameError: {
+    ...typography.caption,
+    color: colors.error,
+    marginBottom: spacing.sm,
+  },
+  usernameSuccess: {
+    ...typography.caption,
+    color: colors.success,
+    marginBottom: spacing.sm,
+  },
+  suggestionsButton: {
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  suggestionsButtonText: {
+    ...typography.caption,
+    color: colors.info,
+    fontWeight: '600',
+  },
+
+  // Pinterest input styles
+  pinterestInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: spacing.borderRadius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.xxxl,
+    marginBottom: spacing.md,
+    backgroundColor: colors.background,
+    height: 50,
+  },
+  pinterestIcon: {
+    marginRight: spacing.md,
+  },
+  urlPrefix: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '500',
+    marginRight: spacing.xs,
+  },
+  pinterestInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    padding: 0,
+    margin: 0,
+  },
+  pinterestError: {
+    ...typography.caption,
+    color: colors.error,
+    marginBottom: spacing.sm,
+  },
+  pinterestHelp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  pinterestHelpText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
+  },
+  skipButton: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  skipButtonText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+
+  // Pinterest analysis results styles
+  analysisResults: {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: spacing.borderRadius.md,
+    padding: spacing.lg,
+    marginTop: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  analysisTitle: {
+    ...typography.h3,
+    color: colors.text,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  analysisDescription: {
+    ...typography.body,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  analysisSection: {
+    marginBottom: spacing.md,
+  },
+  analysisSectionTitle: {
+    ...typography.caption,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+  keywordContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  keywordTag: {
+    backgroundColor: colors.info + '20',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: spacing.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.info + '40',
+  },
+  keywordText: {
+    ...typography.caption,
+    color: colors.info,
+    fontWeight: '500',
+  },
+  colorTag: {
+    backgroundColor: colors.textSecondary + '20',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: spacing.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.textSecondary + '40',
+  },
+  colorText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
 }); 
