@@ -95,10 +95,10 @@ export const UsernameScreen: React.FC = () => {
       
       console.log('✅ User profile created successfully');
       
-      // Navigate to Pinterest onboarding
-      console.log('🧭 Navigating to Pinterest screen');
+      // Navigate to Shopping Preference screen
+      console.log('🧭 Navigating to Shopping Preference screen');
       router.push({
-        pathname: '/auth/pinterest',
+        pathname: '/auth/shopping-preference',
         params: devMode ? { devMode } : {}
       });
     } catch (error) {

@@ -19,8 +19,9 @@ function RootLayoutNav() {
       <Stack.Screen name="auth/verify" redirect={!!session && onboardingCompleted} />
       <Stack.Screen name="auth/welcome" redirect={!!session && onboardingCompleted} />
       
-      {/* Allow username and pinterest screens if user has session but hasn't completed onboarding */}
+      {/* Allow username, shopping preference and pinterest screens if user has session but hasn't completed onboarding */}
       <Stack.Screen name="auth/username" redirect={!!session && onboardingCompleted} />
+      <Stack.Screen name="auth/shopping-preference" redirect={!!session && onboardingCompleted} />
       <Stack.Screen name="auth/pinterest" redirect={!!session && onboardingCompleted} />
 
       {/* If the user is not signed in OR hasn't completed onboarding, redirect them away from the app pages. */}

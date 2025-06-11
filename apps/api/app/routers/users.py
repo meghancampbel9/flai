@@ -24,6 +24,7 @@ class UserProfile(BaseModel):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     phone_number: Optional[str] = None
+    shopping_preference: Optional[str] = None
     onboarding_completed: bool
     pinterest_board_analyzed: Optional[str] = None
     created_at: str
@@ -42,6 +43,7 @@ class UpdateProfileRequest(BaseModel):
     display_name: Optional[str] = None
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
+    shopping_preference: Optional[str] = None
 
 class CompleteOnboardingRequest(BaseModel):
     pass  # No fields needed - just marks onboarding as complete
@@ -129,7 +131,8 @@ async def update_user_profile(user_id: str, request: UpdateProfileRequest):
         updates = {
             'display_name': request.display_name,
             'bio': request.bio,
-            'avatar_url': request.avatar_url
+            'avatar_url': request.avatar_url,
+            'shopping_preference': request.shopping_preference
         }
         
         result = await db_service.update_user_profile(user_id, updates)

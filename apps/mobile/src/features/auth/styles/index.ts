@@ -260,6 +260,54 @@ export const authStyles = StyleSheet.create({
     marginBottom: spacing.md,
     textAlign: 'center',
   },
+
+  // Shopping Preference Screen styles
+  preferencesContainer: {
+    gap: spacing.md,
+  },
+  preferenceOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: spacing.borderRadius.md,
+    backgroundColor: colors.background,
+  },
+  preferenceOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  preferenceOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  preferenceOptionText: {
+    ...typography.h3,
+    color: colors.text,
+    marginLeft: spacing.lg,
+    fontWeight: '500',
+  },
+  preferenceOptionTextSelected: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  preferenceSelectionIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  preferenceSelectionIndicatorSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
   analysisDescription: {
     ...typography.body,
     color: colors.textSecondary,

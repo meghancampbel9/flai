@@ -5,6 +5,9 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { userService, UserProfile } from '@/features/auth/services/userService';
+import { ProductGrid } from '@/features/product/components/ProductGrid';
+import { Product } from '@/types/product';
+import { mockClosetItems, mockWishlistItems } from '@/data/mockProducts';
 import { colors, typography, spacing } from '@/styles';
 import { dashboardStyles } from '../styles';
 
@@ -18,8 +21,8 @@ export const ProfileScreen: React.FC = () => {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   // Mock data for now - replace with actual data later
-  const [closetItems] = useState([]);
-  const [wishlistItems] = useState([]);
+  const [closetItems] = useState<Product[]>(mockClosetItems);
+  const [wishlistItems] = useState<Product[]>(mockWishlistItems);
 
   // Fetch user profile
   useEffect(() => {
@@ -163,11 +166,11 @@ export const ProfileScreen: React.FC = () => {
         style={[dashboardStyles.tab, activeTab === 'closet' && dashboardStyles.activeTab]}
         onPress={() => setActiveTab('closet')}
       >
-        <Ionicons 
+        {/* <Ionicons 
           name="grid-outline" 
           size={24} 
           color={activeTab === 'closet' ? colors.text : colors.textSecondary} 
-        />
+        /> */}
         <Text style={[
           dashboardStyles.tabText, 
           activeTab === 'closet' && dashboardStyles.activeTabText
@@ -179,11 +182,11 @@ export const ProfileScreen: React.FC = () => {
         style={[dashboardStyles.tab, activeTab === 'wishlist' && dashboardStyles.activeTab]}
         onPress={() => setActiveTab('wishlist')}
       >
-        <Ionicons 
+        {/* <Ionicons 
           name="heart-outline" 
           size={24} 
           color={activeTab === 'wishlist' ? colors.text : colors.textSecondary} 
-        />
+        /> */}
         <Text style={[
           dashboardStyles.tabText, 
           activeTab === 'wishlist' && dashboardStyles.activeTabText
@@ -194,28 +197,21 @@ export const ProfileScreen: React.FC = () => {
     </View>
   );
 
+  const handleProductPress = (product: Product) => {
+    router.push(`/product/${product.id}`);
+  };
+
   const renderGrid = () => {
     const items = activeTab === 'closet' ? closetItems : wishlistItems;
     
-    if (items.length === 0) {
-      return (
-        <View style={dashboardStyles.emptyGridState}>
-          <Ionicons 
-            name={activeTab === 'closet' ? 'shirt-outline' : 'heart-outline'} 
-            size={60} 
-            color={colors.textSecondary} 
-          />
-          <Text style={dashboardStyles.emptyGridTitle}>
-            {activeTab === 'closet' ? 'No items in your closet' : 'No items in your wishlist'}
-          </Text>
-        </View>
-      );
-    }
-
-    // TODO: Implement actual grid of items
     return (
-      <View style={dashboardStyles.grid}>
-        {/* Grid items will go here */}
+      <View style={dashboardStyles.gridWrapper}>
+        <ProductGrid
+          products={items}
+          type={activeTab}
+          onProductPress={handleProductPress}
+          loading={loading}
+        />
       </View>
     );
   };

@@ -244,7 +244,7 @@ export const dashboardStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
@@ -263,6 +263,9 @@ export const dashboardStyles = StyleSheet.create({
   grid: {
     flex: 1,
     padding: spacing.lg,
+  },
+  gridWrapper: {
+    paddingTop: spacing.md,
   },
   emptyGridState: {
     flex: 1,
@@ -340,17 +343,16 @@ export const dashboardStyles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontWeight: '600',
-    marginBottom: spacing.sm,
   },
   textInput: {
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: spacing.borderRadius.sm,
-    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     ...typography.body,
     color: colors.text,
+    textAlignVertical: 'center',
   },
   textInputText: {
     ...typography.body,
@@ -432,5 +434,43 @@ export const dashboardStyles = StyleSheet.create({
     color: colors.background,
     ...typography.body,
     fontWeight: '600',
+  },
+
+  // HomeScreen styles
+  homeContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  searchContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.background,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: spacing.borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    color: colors.text,
+    padding: 0,
+  },
+  clearIcon: {
+    marginLeft: spacing.sm,
+    padding: spacing.xs,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl,
   },
 }); 

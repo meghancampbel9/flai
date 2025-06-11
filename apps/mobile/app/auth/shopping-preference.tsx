@@ -1,0 +1,1 @@
+export { ShoppingPreferenceScreen as default } from '@/features/auth/components/ShoppingPreferenceScreen'; 

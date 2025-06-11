@@ -19,6 +19,7 @@ export const spacing = {
   
   // Border radius
   borderRadius: {
+    xs: 4,
     sm: 8,
     md: 12,
     lg: 25,

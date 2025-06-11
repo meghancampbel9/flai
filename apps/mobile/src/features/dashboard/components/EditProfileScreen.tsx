@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { userService, UserProfile } from '@/features/auth/services/userService';
+import { pinterestService } from '@/features/auth/services/pinterestService';
 import { componentStyles, colors, typography, spacing } from '@/styles';
 import { dashboardStyles } from '../styles';
+import { authStyles } from '@/features/auth/styles';
 
 export const EditProfileScreen: React.FC = () => {
   const { user } = useAuth();
@@ -15,9 +17,11 @@ export const EditProfileScreen: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [pinterestBoard, setPinterestBoard] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
   // Fetch current profile data
   useEffect(() => {
@@ -31,6 +35,7 @@ export const EditProfileScreen: React.FC = () => {
         setDisplayName(profile.display_name || '');
         setBio(profile.bio || '');
         setProfileImage(profile.avatar_url || null);
+        setPinterestBoard(profile.pinterest_board_analyzed || '');
       } catch (error) {
         Alert.alert('Error', 'Failed to load profile data.');
       } finally {
@@ -52,7 +57,7 @@ export const EditProfileScreen: React.FC = () => {
 
       // Show action sheet for photo options
       Alert.alert(
-        'Change Profile Photo',
+        'Edit Profile Photo',
         'Choose an option',
         [
           {
@@ -130,6 +135,48 @@ export const EditProfileScreen: React.FC = () => {
       if (Object.keys(updates).length > 0) {
         await userService.updateUserProfile(user.id, updates);
       }
+
+      // Handle Pinterest board update if changed
+      if (pinterestBoard.trim() !== (userProfile?.pinterest_board_analyzed || '')) {
+        if (pinterestBoard.trim()) {
+          // Construct full Pinterest URL
+          const constructPinterestUrl = (input: string) => {
+            if (input.startsWith('http')) {
+              return input;
+            }
+            return `https://pinterest.com/${input}`;
+          };
+          const fullUrl = constructPinterestUrl(pinterestBoard.trim());
+          
+          // First update the Pinterest board URL
+          await userService.updatePinterestBoard(user.id, fullUrl);
+          // Then analyze the board
+          setAnalyzing(true);
+          try {
+            const analysisResult = await pinterestService.analyzeBoard(fullUrl, user.id);
+            if (analysisResult.success) {
+              console.log('✅ Pinterest board analyzed successfully');
+            } else {
+              // Analysis failed but don't block the save
+              console.warn('⚠️ Pinterest analysis failed:', analysisResult.message);
+              Alert.alert(
+                'Pinterest Analysis', 
+                `Board updated but analysis failed: ${analysisResult.message}`,
+                [{ text: 'OK' }]
+              );
+            }
+          } catch (error) {
+            console.error('❌ Pinterest analysis error:', error);
+            Alert.alert(
+              'Pinterest Analysis', 
+              'Board updated but analysis failed. You can try again later.',
+              [{ text: 'OK' }]
+            );
+          } finally {
+            setAnalyzing(false);
+          }
+        }
+      }
       
       // Navigate back after successful update
       router.replace('/dashboard/profile');
@@ -139,6 +186,7 @@ export const EditProfileScreen: React.FC = () => {
     } finally {
       setSaving(false);
       setUploading(false);
+      setAnalyzing(false);
     }
   };
 
@@ -169,10 +217,10 @@ export const EditProfileScreen: React.FC = () => {
         <Text style={dashboardStyles.headerTitle}>Edit Profile</Text>
         <TouchableOpacity 
           onPress={handleSave} 
-          style={[dashboardStyles.headerButton, { opacity: saving || uploading ? 0.5 : 1 }]}
-          disabled={saving || uploading}
+          style={[dashboardStyles.headerButton, { opacity: saving || uploading || analyzing ? 0.5 : 1 }]}
+          disabled={saving || uploading || analyzing}
         >
-          {saving || uploading ? (
+          {saving || uploading || analyzing ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Text style={[dashboardStyles.headerButtonText, { color: colors.primary }]}>Save</Text>
@@ -180,7 +228,17 @@ export const EditProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={dashboardStyles.editProfileContent}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          style={dashboardStyles.editProfileContent}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing.xl }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Profile Picture Section */}
         <View style={dashboardStyles.editProfilePictureSection}>
           {profileImage ? (
@@ -202,9 +260,10 @@ export const EditProfileScreen: React.FC = () => {
           {/* Username (Read-only) */}
           <View style={dashboardStyles.fieldGroup}>
             <Text style={dashboardStyles.fieldLabel}>Username</Text>
-            <View style={[dashboardStyles.textInput, { backgroundColor: colors.backgroundSecondary }]}>
-              <Text style={[dashboardStyles.textInputText, { color: colors.textSecondary }]}>
-                @{userProfile?.username || 'username'}
+            <View style={[authStyles.usernameInputContainer, { opacity: 0.6, backgroundColor: colors.backgroundSecondary, marginTop: 5, marginBottom: 5 }]}>
+              <Text style={authStyles.usernamePrefix}>@</Text>
+              <Text style={[authStyles.usernameInput, { color: colors.textSecondary }]}>
+                {userProfile?.username || 'username'}
               </Text>
             </View>
           </View>
@@ -212,49 +271,80 @@ export const EditProfileScreen: React.FC = () => {
           {/* Display Name */}
           <View style={dashboardStyles.fieldGroup}>
             <Text style={dashboardStyles.fieldLabel}>Display Name</Text>
-            <TextInput
-              style={dashboardStyles.textInput}
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Enter your display name"
-              placeholderTextColor={colors.textSecondary}
-              maxLength={50}
-            />
-            <Text style={dashboardStyles.fieldHelper}>
-              Your display name appears on your profile
-            </Text>
+            <View style={[authStyles.usernameInputContainer, { marginTop: 5, marginBottom: 5 }]}>
+              <TextInput
+                style={authStyles.usernameInput}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="Enter your display name"
+                placeholderTextColor={colors.textMuted}
+                maxLength={50}
+              />
+            </View>
           </View>
 
           {/* Bio */}
           <View style={dashboardStyles.fieldGroup}>
             <Text style={dashboardStyles.fieldLabel}>Bio</Text>
-            <TextInput
-              style={[dashboardStyles.textInput, dashboardStyles.textArea]}
-              value={bio}
-              onChangeText={setBio}
-              placeholder="Tell us about yourself..."
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={4}
-              maxLength={200}
-              textAlignVertical="top"
-            />
+            <View style={[authStyles.usernameInputContainer, { height: 100, alignItems: 'flex-start', paddingTop: spacing.md, marginTop: 5, marginBottom: 5 }]}>
+              <TextInput
+                style={[authStyles.usernameInput, { height: '100%', textAlignVertical: 'top' }]}
+                value={bio}
+                onChangeText={setBio}
+                placeholder="Tell us about yourself..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+                numberOfLines={4}
+                maxLength={200}
+              />
+            </View>
             <Text style={dashboardStyles.fieldHelper}>
               {bio.length}/200 characters
+            </Text>
+          </View>
+
+          {/* Pinterest Board */}
+          <View style={dashboardStyles.fieldGroup}>
+            <Text style={dashboardStyles.fieldLabel}>Pinterest Board</Text>
+            <View style={[authStyles.pinterestInputContainer, { marginTop: 5, marginBottom: 5 }]}>
+              <Ionicons 
+                name="logo-pinterest" 
+                size={24} 
+                color={colors.error} 
+                style={authStyles.pinterestIcon} 
+              />
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Text style={[authStyles.urlPrefix, { color: colors.textSecondary }]}>
+                  pinterest.com/
+                </Text>
+                <TextInput
+                  style={[authStyles.pinterestInput, { flex: 1, paddingLeft: 0 }]}
+                  value={pinterestBoard.replace('https://pinterest.com/', '').replace('pinterest.com/', '')}
+                  onChangeText={(text) => setPinterestBoard(text)}
+                  placeholder="username/boardname"
+                  placeholderTextColor={colors.textMuted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+            <Text style={dashboardStyles.fieldHelper}>
+              Link your Pinterest board for style analysis
             </Text>
           </View>
 
           {/* Phone (Read-only) */}
           <View style={dashboardStyles.fieldGroup}>
             <Text style={dashboardStyles.fieldLabel}>Phone</Text>
-            <View style={[dashboardStyles.textInput, { backgroundColor: colors.backgroundSecondary }]}>
-              <Text style={[dashboardStyles.textInputText, { color: colors.textSecondary }]}>
+            <View style={[authStyles.usernameInputContainer, { opacity: 0.6, backgroundColor: colors.backgroundSecondary, marginTop: 5, marginBottom: 5 }]}>
+              <Text style={[authStyles.usernameInput, { color: colors.textSecondary }]}>
                 {user?.phone || 'Not available'}
               </Text>
             </View>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }; 

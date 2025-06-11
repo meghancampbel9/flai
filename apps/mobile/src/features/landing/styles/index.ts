@@ -77,8 +77,6 @@ export const landingStyles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   
-
-  
     // Terms and links
   termsText: {
     ...typography.caption,

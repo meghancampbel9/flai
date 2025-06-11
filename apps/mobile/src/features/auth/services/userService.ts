@@ -17,6 +17,7 @@ export interface UserProfile {
   bio?: string;
   avatar_url?: string;
   phone_number?: string;
+  shopping_preference?: string;
   onboarding_completed: boolean;
   pinterest_board_analyzed?: string;
   created_at: string;
@@ -104,6 +105,7 @@ export const userService = {
     display_name?: string;
     bio?: string;
     avatar_url?: string;
+    shopping_preference?: string;
   }): Promise<UserServiceResponse> {
     try {
       const response = await fetch(`${API_URL}/api/v1/users/profile/${userId}`, {

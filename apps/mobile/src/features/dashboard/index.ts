@@ -1,7 +1,8 @@
 // Components
 export { HomeScreen } from './components/HomeScreen';
+export { EditProfileScreen } from './components/EditProfileScreen';
+export { AccountSettingsScreen } from './components/AccountSettingsScreen';
 export { ProfileScreen } from './components/ProfileScreen';
-export { SearchScreen } from './components/SearchScreen';
 export { CartScreen } from './components/CartScreen';
 
 // Layouts

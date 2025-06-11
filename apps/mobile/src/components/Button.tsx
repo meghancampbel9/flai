@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, PressableStateCallbackType, ViewStyle, TextStyle } from 'react-native';
-import { componentStyles } from '../../styles';
+import { uiStyles } from './styles';
 
 interface ButtonProps {
   title: string;
@@ -32,21 +32,21 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getButtonStyle = ({ pressed }: { pressed: boolean }) => {
     const baseStyle = size === 'large' 
-      ? componentStyles.primaryButtonLarge 
-      : componentStyles.primaryButton;
+      ? uiStyles.primaryButtonLarge 
+      : uiStyles.primaryButton;
     
     return [
       baseStyle,
-      disabled && componentStyles.primaryButtonDisabled,
-      pressed && !disabled && componentStyles.buttonPressed,
+      disabled && uiStyles.primaryButtonDisabled,
+      pressed && !disabled && uiStyles.buttonPressed,
       style,
     ];
   };
 
   const getTextStyle = () => {
     return [
-      componentStyles.primaryButtonText,
-      disabled && componentStyles.primaryButtonTextDisabled,
+      uiStyles.primaryButtonText,
+      disabled && uiStyles.primaryButtonTextDisabled,
       textStyle,
     ];
   };
