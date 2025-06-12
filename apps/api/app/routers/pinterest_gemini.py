@@ -22,7 +22,7 @@ from app.services.analyzed_images_service import analyzed_images_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/pinterest", tags=["Pinterest"])
+router = APIRouter(tags=["Pinterest"])
 
 # Configure Google Gemini
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")

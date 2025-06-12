@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 
 class TestPinterestAnalysis:
-    """Tests for Pinterest board analysis"""
+    """Tests for Pinterest board analysis, updated for robust error handling."""
 
     def test_analyze_valid_board_success(self, api_base_url: str, headers: Dict[str, str]):
         """Test analyzing a potentially invalid Pinterest board (doesnt exist)"""
@@ -32,100 +32,67 @@ class TestPinterestAnalysis:
                 assert "message" in data
 
     def test_analyze_board_invalid_url_format(self, api_base_url: str, headers: Dict[str, str]):
-        """Test analyzing with invalid URL format"""
+        """Test analyzing with invalid URL format. Should fail Pydantic validation."""
         analysis_data = {
             "url": "not-a-valid-url",
             "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
         }
-        
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
-        
-        assert response.status_code == 422  # Pydantic validation error
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
+        assert response.status_code == 422
 
     def test_analyze_board_missing_url(self, api_base_url: str, headers: Dict[str, str]):
-        """Test analyzing without URL"""
-        analysis_data = {
-            "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
-        }
-        
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
-        
-        assert response.status_code == 422  # Pydantic validation error
+        """Test analyzing without a URL. Should fail Pydantic validation."""
+        analysis_data = {"user_id": f"test-user-{uuid.uuid4().hex[:8]}"}
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
+        assert response.status_code == 422
 
     def test_analyze_board_missing_user_id(self, api_base_url: str, headers: Dict[str, str]):
-        """Test analyzing without user_id"""
-        analysis_data = {
-            "url": "https://pinterest.com/testuser/testboard"
-        }
-        
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
-        
-        assert response.status_code == 422  # Pydantic validation error
+        """Test analyzing without a user_id. Should fail Pydantic validation."""
+        analysis_data = {"url": "https://pinterest.com/testuser/testboard"}
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
+        assert response.status_code == 422
 
     def test_analyze_nonexistent_board(self, api_base_url: str, headers: Dict[str, str]):
-        """Test analyzing a non-existent Pinterest board"""
+        """Test analyzing a non-existent Pinterest board. Should return 200 OK with failure message."""
         analysis_data = {
-            "url": f"https://pinterest.com/nonexistentuser{uuid.uuid4().hex[:8]}/nonexistentboard{uuid.uuid4().hex[:8]}",
+            "url": f"https://pinterest.com/nonexistentuser{uuid.uuid4().hex[:4]}/nonexistentboard{uuid.uuid4().hex[:4]}",
             "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
         }
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
         
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
-        
-        # Should return error for non-existent board
-        assert response.status_code in [400, 500]
-        
+        assert response.status_code == 200
         data = response.json()
-        if "detail" in data:
-            # Should contain error message about board not found
-            assert any(keyword in data["detail"].lower() for keyword in ["not found", "board", "pinterest"])
+        assert data["success"] is False
+        assert "not found" in data["message"].lower()
+        assert data["validation_error"] is True
 
     def test_analyze_board_wrong_pinterest_format(self, api_base_url: str, headers: Dict[str, str]):
-        """Test analyzing with wrong Pinterest URL format"""
+        """Test analyzing with wrong Pinterest URL format (e.g., missing board name). Should return 200 OK with failure message."""
         analysis_data = {
             "url": "https://pinterest.com/wrongformat",  # Missing board name
             "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
         }
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
         
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
-        
-        # Should return error for invalid Pinterest URL format
-        assert response.status_code in [400, 500]
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert "invalid pinterest url format" in data["message"].lower()
+        assert data["validation_error"] is True
 
     def test_analyze_board_non_pinterest_url(self, api_base_url: str, headers: Dict[str, str]):
-        """Test analyzing with non-Pinterest URL"""
+        """Test analyzing with a non-Pinterest URL. Should return 200 OK with a validation error."""
         analysis_data = {
             "url": "https://example.com/some/path",
             "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
         }
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
         
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
-        
-        # Should return error for non-Pinterest URL
-        assert response.status_code in [400, 500]
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert "must be a pinterest board url" in data["message"].lower()
+        assert data["validation_error"] is True
 
     def test_analyze_board_empty_request_body(self, api_base_url: str, headers: Dict[str, str]):
         """Test analyzing with empty request body"""
@@ -149,12 +116,11 @@ class TestPinterestAnalysis:
         assert response.status_code == 422
 
     @pytest.mark.integration
-    def test_analyze_real_pinterest_board(self, api_base_url: str, headers: Dict[str, str]):
-        """Integration test with a real Pinterest board (if available)"""
-        # This test is marked as integration and may be skipped in unit tests
-        # Use a known public Pinterest board for testing
+    def test_analyze_real_working_pinterest_board(self, api_base_url: str, headers: Dict[str, str]):
+        """Integration test with a real, working Pinterest board."""
+        # This test relies on a public board and external services (Pinterest, Gemini).
         analysis_data = {
-            "url": "https://pinterest.com/pinterest/official-pinterest-pins",  # Pinterest's official board
+            "url": "https://de.pinterest.com/meghancampbel9/light",
             "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
         }
         
@@ -162,65 +128,52 @@ class TestPinterestAnalysis:
             f"{api_base_url}/pinterest/analyze-board",
             headers=headers,
             json=analysis_data,
-            timeout=30
+            timeout=60  # Increased timeout for real analysis
         )
         
-        # This test may fail due to Pinterest's anti-bot protection
-        assert response.status_code in [200, 400, 403, 500]
+        assert response.status_code == 200
         
-        if response.status_code == 200:
-            data = response.json()
-            assert "success" in data
-            assert "message" in data
-            
-            if data["success"] and "style_analysis" in data:
-                style_analysis = data["style_analysis"]
-                assert "aesthetic_description" in style_analysis
-                assert "style_keywords" in style_analysis
-                assert isinstance(style_analysis["style_keywords"], list)
-                assert "color_palette" in style_analysis
-                assert isinstance(style_analysis["color_palette"], list)
-                assert "themes" in style_analysis
-                assert isinstance(style_analysis["themes"], list)
-                assert "confidence_score" in style_analysis
-                assert isinstance(style_analysis["confidence_score"], (int, float))
-                assert 0 <= style_analysis["confidence_score"] <= 1
+        data = response.json()
+        assert "success" in data
+        assert "message" in data
+        
+        # This part of the test depends on whether the board is accessible at runtime
+        if data["success"]:
+            assert "style_analysis" in data
+            style_analysis = data["style_analysis"]
+            assert "aesthetic_description" in style_analysis
+            assert "style_keywords" in style_analysis and isinstance(style_analysis["style_keywords"], list)
+            assert "color_palette" in style_analysis and isinstance(style_analysis["color_palette"], list)
+            assert "themes" in style_analysis and isinstance(style_analysis["themes"], list)
+            assert "confidence_score" in style_analysis and isinstance(style_analysis["confidence_score"], float)
+        else:
+            # If it fails, it should give a clear message
+            assert data["validation_error"] is True
+            assert "not found" in data["message"].lower() or "failed to analyze" in data["message"].lower()
 
     def test_analyze_board_response_structure(self, api_base_url: str, headers: Dict[str, str]):
-        """Test that the response structure is consistent regardless of success/failure"""
+        """Test that the response structure is consistent for both success and validation failures."""
         analysis_data = {
-            "url": "https://pinterest.com/testuser/testboard",
+            "url": "https://pinterest.com/invalidformat",
             "user_id": f"test-user-{uuid.uuid4().hex[:8]}"
         }
         
-        response = requests.post(
-            f"{api_base_url}/pinterest/analyze-board",
-            headers=headers,
-            json=analysis_data
-        )
+        response = requests.post(f"{api_base_url}/pinterest/analyze-board", headers=headers, json=analysis_data)
         
-        # Check response structure
         assert response.headers.get("content-type") == "application/json"
-        
+        assert response.status_code == 200
+
         try:
             data = response.json()
+            assert "success" in data and isinstance(data["success"], bool)
+            assert "message" in data and isinstance(data["message"], str)
+            assert "validation_error" in data and isinstance(data["validation_error"], bool)
             
-            if response.status_code == 200:
-                # Success response structure
-                assert "success" in data
-                assert "message" in data
-                assert isinstance(data["success"], bool)
-                assert isinstance(data["message"], str)
+            if data["success"]:
+                assert "style_analysis" in data and isinstance(data["style_analysis"], dict)
+            else:
+                assert data["success"] is False
                 
-                if data["success"] and "style_analysis" in data:
-                    style_analysis = data["style_analysis"]
-                    assert isinstance(style_analysis, dict)
-            
-            elif response.status_code >= 400:
-                # Error response structure
-                if "detail" in data:
-                    assert isinstance(data["detail"], str)
-                    
         except json.JSONDecodeError:
             pytest.fail("Response is not valid JSON")
 

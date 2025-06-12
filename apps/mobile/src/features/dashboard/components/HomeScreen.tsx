@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,26 +8,35 @@ import { Product } from '@/types/product';
 import { colors, typography, spacing } from '@/styles';
 import { dashboardStyles } from '../styles';
 import { API_URL } from '@/config/api';
+import { getStyleRecommendations } from '@/services/recommendationService';
 
 export const HomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`${API_URL}/products?limit=500`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.statusText}`);
-        }
-        const data: Product[] = await response.json();
-        setAllProducts(data);
-        setFilteredProducts(data);
+
+        // Fetch recommendations and all products in parallel
+        const [recommendations, all] = await Promise.all([
+          getStyleRecommendations(),
+          fetch(`${API_URL}/products?limit=500`).then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch products: ${res.statusText}`);
+            return res.json();
+          })
+        ]);
+
+        setRecommendedProducts(recommendations);
+        setAllProducts(all);
+        setFilteredProducts(all);
+
       } catch (e: any) {
         setError(e.message || 'An unexpected error occurred');
         Alert.alert('Error', 'Could not load products. Please try again later.');
@@ -36,7 +45,7 @@ export const HomeScreen: React.FC = () => {
       }
     };
 
-    fetchProducts();
+    fetchAllData();
   }, []);
 
   useEffect(() => {
@@ -95,6 +104,16 @@ export const HomeScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
+          {searchQuery.length === 0 && recommendedProducts.length > 0 && (
+            <>
+              <ProductGrid
+                products={recommendedProducts}
+                type="recommended"
+                onProductPress={handleProductPress}
+                loading={loading}
+              />
+            </>
+          )}
           <ProductGrid
             products={filteredProducts}
             type="recommended"

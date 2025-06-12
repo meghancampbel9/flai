@@ -16,54 +16,44 @@ export interface PinterestAnalysisResponse {
 }
 
 export const pinterestService = {
-  async analyzeBoard(url: string, userId: string): Promise<PinterestAnalysisResponse> {
-    const payload = {
-      url,
-      user_id: userId,
-    };
-    console.log(`🎨 Analyzing Pinterest board with url ${payload.url} and user_id ${payload.user_id}`);
-
+  async analyzeBoard(boardUrl: string, userId: string): Promise<PinterestAnalysisResponse> {
     try {
       const response = await fetch(`${API_URL}/api/v1/pinterest/analyze-board`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ url: boardUrl, user_id: userId }),
       });
 
+      // Handle non-200 responses gracefully
       if (!response.ok) {
+        // Try to parse the error response from the server
         try {
           const errorData = await response.json();
-          if (response.status === 400 && errorData.detail) {
-            return {
-              success: false,
-              message: errorData.detail,
-              validation_error: true
-            };
-          } else {
-            throw new Error(errorData.detail || `API error: ${response.status}`);
-          }
-        } catch (parseError) {
-          throw new Error(`API error: ${response.status}`);
+          return {
+            success: false,
+            message: errorData.detail || `Server returned an error: ${response.status}`,
+            validation_error: true, // Treat all server errors as validation issues for the UI
+          };
+        } catch (e) {
+          // If parsing fails, return a generic error
+          return {
+            success: false,
+            message: `Unable to connect to API server. Status: ${response.status}`,
+            validation_error: true,
+          };
         }
       }
 
-      const data = await response.json();
-      console.log('✅ Pinterest API response received');
-      
-      if (data.style_analysis) {
-        console.log('🎨 Style Analysis Result:');
-        console.log('📝 Description:', data.style_analysis.aesthetic_description);
-        console.log('🏷️ Keywords:', data.style_analysis.style_keywords);
-        console.log('🎨 Colors:', data.style_analysis.color_palette);
-        console.log('🎯 Themes:', data.style_analysis.themes);
-        console.log('📊 Confidence:', data.style_analysis.confidence_score);
-      }
-      return data;
+      return await response.json();
     } catch (error) {
-      console.error('❌ Pinterest API request failed:', error instanceof Error ? error.message : 'Unknown error');
-      throw new Error('Unable to connect to API server. Please ensure it is running.');
+      console.error('❌ Pinterest API request failed:', error);
+      return {
+        success: false,
+        message: 'A network error occurred. Please check your connection.',
+        validation_error: false
+      };
     }
   },
 }; 

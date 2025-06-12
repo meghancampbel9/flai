@@ -28,10 +28,8 @@ export const ShoppingPreferenceScreen: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const userId = user?.id || 'dev-user-id';
-      
       // Update user profile with shopping preference
-      await userService.updateUserProfile(userId, {
+      await userService.updateUserProfile({
         shopping_preference: selectedPreference
       });
       

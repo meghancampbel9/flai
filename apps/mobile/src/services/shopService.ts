@@ -20,18 +20,16 @@ const getAuthHeader = async () => {
 };
 
 export const getCartItems = async (): Promise<Product[]> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    const response = await fetch(`${API_URL}/api/v1/shop/cart/${userId}/items`, { headers });
+    const response = await fetch(`${API_URL}/api/v1/shop/cart/items`, { headers });
     if (response.status === 404) return [];
     if (!response.ok) throw new Error("Failed to fetch cart items");
     return response.json();
 };
 
 export const addToCart = async (productId: string, quantity: number = 1): Promise<void> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    const response = await fetch(`${API_URL}/api/v1/shop/cart/${userId}/items`, {
+    const response = await fetch(`${API_URL}/api/v1/shop/cart/items`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ product_id: productId, quantity })
@@ -43,18 +41,16 @@ export const addToCart = async (productId: string, quantity: number = 1): Promis
 };
 
 export const removeFromCart = async (productId: string): Promise<void> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    await fetch(`${API_URL}/api/v1/shop/cart/${userId}/items/${productId}`, {
+    await fetch(`${API_URL}/api/v1/shop/cart/items/${productId}`, {
         method: 'DELETE',
         headers
     });
 };
 
 export const checkout = async (): Promise<{ message: string }> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    const response = await fetch(`${API_URL}/api/v1/shop/cart/${userId}/checkout`, {
+    const response = await fetch(`${API_URL}/api/v1/shop/cart/checkout`, {
         method: 'POST',
         headers
     });
@@ -63,18 +59,16 @@ export const checkout = async (): Promise<{ message: string }> => {
 };
 
 export const getWishlistItems = async (): Promise<Product[]> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    const response = await fetch(`${API_URL}/api/v1/shop/wishlist/${userId}/items`, { headers });
+    const response = await fetch(`${API_URL}/api/v1/shop/wishlist/items`, { headers });
     if (response.status === 404) return [];
     if (!response.ok) throw new Error("Failed to fetch wishlist items");
     return response.json();
 };
 
 export const addToWishlist = async (productId: string): Promise<void> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    const response = await fetch(`${API_URL}/api/v1/shop/wishlist/${userId}/items`, {
+    const response = await fetch(`${API_URL}/api/v1/shop/wishlist/items`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ product_id: productId })
@@ -86,18 +80,16 @@ export const addToWishlist = async (productId: string): Promise<void> => {
 };
 
 export const removeFromWishlist = async (productId: string): Promise<void> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    await fetch(`${API_URL}/api/v1/shop/wishlist/${userId}/items/${productId}`, {
+    await fetch(`${API_URL}/api/v1/shop/wishlist/items/${productId}`, {
         method: 'DELETE',
         headers
     });
 };
 
 export const getClosetItems = async (): Promise<Product[]> => {
-    const userId = await getUserId();
     const headers = await getAuthHeader();
-    const response = await fetch(`${API_URL}/api/v1/shop/closet/${userId}/items`, { headers });
+    const response = await fetch(`${API_URL}/api/v1/shop/closet/items`, { headers });
     if (response.status === 404) return [];
     if (!response.ok) throw new Error("Failed to fetch closet items");
     return response.json();

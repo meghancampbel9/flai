@@ -4,6 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/features/auth/stores/AuthContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
+// Import dev tools in development
+if (__DEV__) {
+  require('@/utils/devTools');
+}
+
 function RootLayoutNav() {
   const { session, loading, onboardingCompleted } = useAuth();
 

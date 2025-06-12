@@ -2,6 +2,23 @@ import { supabase } from '@/config/supabase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
+const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log("session",`${session}`)
+    if (!session) throw new Error("User not authenticated");
+    console.log("no error returning",`${session}`)
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+    };
+};
+
+const getUserId = async (): Promise<string> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) throw new Error("User not authenticated");
+    return session.user.id;
+};
+
 export interface CreateUserProfileRequest {
   user_id: string;
   username: string;
@@ -50,6 +67,7 @@ export interface UsernameCheckResponse {
 export const userService = {
   async createUserProfile(data: CreateUserProfileRequest): Promise<UserServiceResponse> {
     try {
+      console.log("attemtping get user")
       const response = await fetch(`${API_URL}/api/v1/users/profile`, {
         method: 'POST',
         headers: {
@@ -72,13 +90,12 @@ export const userService = {
     }
   },
 
-  async getUserProfile(userId: string): Promise<UserProfile> {
+  async getUserProfile(): Promise<UserProfile> {
     try {
-      const response = await fetch(`${API_URL}/api/v1/users/profile/${userId}`, {
+      const headers = await getAuthHeader();
+      const response = await fetch(`${API_URL}/api/v1/users/profile`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       });
 
       if (!response.ok) {
@@ -101,18 +118,23 @@ export const userService = {
     }
   },
 
-  async updateUserProfile(userId: string, updates: {
+  async updateUserProfile(updates: {
     display_name?: string;
     bio?: string;
     avatar_url?: string;
     shopping_preference?: string;
   }): Promise<UserServiceResponse> {
     try {
-      const response = await fetch(`${API_URL}/api/v1/users/profile/${userId}`, {
+      // Prevent API call if there are no actual updates
+      if (Object.keys(updates).length === 0) {
+        console.log('⚠️ Attempted to update profile with no new data. Skipping.');
+        return { success: true, message: "No updates provided." };
+      }
+
+      const headers = await getAuthHeader();
+      const response = await fetch(`${API_URL}/api/v1/users/profile`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify(updates),
       });
 
@@ -130,13 +152,12 @@ export const userService = {
     }
   },
 
-  async completeOnboarding(userId: string): Promise<UserServiceResponse> {
+  async completeOnboarding(): Promise<UserServiceResponse> {
     try {
-      const response = await fetch(`${API_URL}/api/v1/users/profile/${userId}/complete-onboarding`, {
+      const headers = await getAuthHeader();
+      const response = await fetch(`${API_URL}/api/v1/users/profile/complete-onboarding`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({}),
       });
 
@@ -176,18 +197,17 @@ export const userService = {
     }
   },
 
-  async getUserStylePreferences(userId: string): Promise<StylePreference[]> {
+  async getUserStylePreferences(): Promise<StylePreference[]> {
     try {
-      const response = await fetch(`${API_URL}/api/v1/pinterest/analyzed-images/${userId}?limit=50`, {
+      const headers = await getAuthHeader();
+      const response = await fetch(`${API_URL}/api/v1/users/profile/style-preferences`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       });
 
       if (!response.ok) {
-        if (response.status === 404) {
-          return []; // No analyzed images found
+        if (response.status === 404 || response.status === 401) {
+          return []; // No analyzed images found or unauthorized
         }
         throw new Error(`API error: ${response.status}`);
       }
@@ -227,6 +247,7 @@ export const userService = {
       });
       
       // Create aggregated style preference
+      const userId = analyzedImages[0]?.user_id || 'unknown';
       const aggregatedPreference: StylePreference = {
         id: `aggregated-${userId}`,
         aesthetic_description: `Style analysis based on ${analyzedImages.length} Pinterest images`,
@@ -246,8 +267,9 @@ export const userService = {
     }
   },
 
-  async uploadProfileImage(userId: string, imageUri: string): Promise<string> {
+  async uploadProfileImage(imageUri: string): Promise<string> {
     try {
+      const userId = await getUserId();
       const response = await fetch(imageUri);
       if (!response.ok) {
         throw new Error(`Failed to read image file: ${response.status}`);
@@ -288,13 +310,12 @@ export const userService = {
     }
   },
 
-  async updatePinterestBoard(userId: string, pinterestBoardUrl: string): Promise<UserServiceResponse> {
+  async updatePinterestBoard(pinterestBoardUrl: string): Promise<UserServiceResponse> {
     try {
-      const response = await fetch(`${API_URL}/api/v1/users/profile/${userId}/pinterest-board`, {
+      const headers = await getAuthHeader();
+      const response = await fetch(`${API_URL}/api/v1/users/profile/pinterest-board`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({ pinterest_board_url: pinterestBoardUrl }),
       });
 

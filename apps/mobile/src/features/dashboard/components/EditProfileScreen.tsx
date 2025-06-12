@@ -30,7 +30,7 @@ export const EditProfileScreen: React.FC = () => {
       
       try {
         setLoading(true);
-        const profile = await userService.getUserProfile(user.id);
+        const profile = await userService.getUserProfile();
         setUserProfile(profile);
         setDisplayName(profile.display_name || '');
         setBio(profile.bio || '');
@@ -122,7 +122,7 @@ export const EditProfileScreen: React.FC = () => {
       if (profileImage !== (userProfile?.avatar_url || null)) {
         if (profileImage && profileImage.startsWith('file://')) {
           setUploading(true);
-          const uploadedImageUrl = await userService.uploadProfileImage(user.id, profileImage);
+          const uploadedImageUrl = await userService.uploadProfileImage(profileImage);
           updates.avatar_url = uploadedImageUrl;
           setUploading(false);
         } else {
@@ -133,7 +133,7 @@ export const EditProfileScreen: React.FC = () => {
 
       // Only make API call if there are actual changes
       if (Object.keys(updates).length > 0) {
-        await userService.updateUserProfile(user.id, updates);
+        await userService.updateUserProfile(updates);
       }
 
       // Handle Pinterest board update if changed
@@ -149,7 +149,7 @@ export const EditProfileScreen: React.FC = () => {
           const fullUrl = constructPinterestUrl(pinterestBoard.trim());
           
           // First update the Pinterest board URL
-          await userService.updatePinterestBoard(user.id, fullUrl);
+          await userService.updatePinterestBoard(pinterestBoard.trim());
           // Then analyze the board
           setAnalyzing(true);
           try {

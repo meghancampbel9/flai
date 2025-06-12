@@ -473,6 +473,15 @@ export const dashboardStyles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xl,
   },
+
+  gridTitle: {
+    ...typography.h3,
+    color: colors.text,
+    fontWeight: '600',
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
 }); 
 
 export const cartStyles = StyleSheet.create({

@@ -34,7 +34,7 @@ export const PhoneScreen: React.FC = () => {
     const fullPhoneNumber = countryCode + phoneNumber;
 
     // TEMPORARY: Skip SMS for testing when Twilio limit is reached
-    if (fullPhoneNumber === '+491799004467') {
+    if (fullPhoneNumber === '+491799004468') {
       console.log('🚀 DEVELOPMENT MODE: Skipping SMS verification');
       Alert.alert(
         'Development Mode', 

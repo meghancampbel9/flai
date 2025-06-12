@@ -34,7 +34,7 @@ export const ProfileScreen: React.FC = () => {
         setLoading(true);
         try {
           const [profileData, closetData, wishlistData] = await Promise.all([
-            userService.getUserProfile(user.id),
+            userService.getUserProfile(),
             getClosetItems(),
             getWishlistItems(),
           ]);
