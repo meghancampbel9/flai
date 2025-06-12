@@ -5,28 +5,51 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ProductGrid } from '@/features/product/components/ProductGrid';
 import { Product } from '@/types/product';
-import { mockRecommendedItems } from '@/data/mockProducts';
 import { colors, typography, spacing } from '@/styles';
 import { dashboardStyles } from '../styles';
+import { API_URL } from '@/config/api';
 
 export const HomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState<Product[]>(mockRecommendedItems);
-  const [loading, setLoading] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Filter products based on search query
-    // TODO semantic search based on vector embeddings
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`${API_URL}/products?limit=1000`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.statusText}`);
+        }
+        const data: Product[] = await response.json();
+        setAllProducts(data);
+        setFilteredProducts(data);
+      } catch (e: any) {
+        setError(e.message || 'An unexpected error occurred');
+        Alert.alert('Error', 'Could not load products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
     if (searchQuery.trim() === '') {
-      setProducts(mockRecommendedItems);
+      setFilteredProducts(allProducts);
     } else {
-      const filteredProducts = mockRecommendedItems.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = allProducts.filter(product =>
+        (product.name && product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (product.brand && product.brand.toLowerCase().includes(searchQuery.toLowerCase()))
       );
-      setProducts(filteredProducts);
+      setFilteredProducts(filtered);
     }
-  }, [searchQuery]);
+  }, [searchQuery, allProducts]);
 
   const handleProductPress = (product: Product) => {
     router.push(`/product/${product.id}`);
@@ -73,7 +96,7 @@ export const HomeScreen: React.FC = () => {
           keyboardDismissMode="on-drag"
         >
           <ProductGrid
-            products={products}
+            products={filteredProducts}
             type="recommended"
             onProductPress={handleProductPress}
             loading={loading}

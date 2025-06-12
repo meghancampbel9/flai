@@ -6,10 +6,16 @@ export interface Product {
   original_price?: number;
   currency: string;
   image_url: string;
-  product_url?: string;
+  product_url: string;
   category?: string;
   is_on_sale?: boolean;
   description: string;
+  sizes?: string[];
+  colors?: string[];
+  material?: string;
+  gender_tag?: string;
+  source: string;
+  created_at: string;
 }
 
 export interface UserProductInteraction {

@@ -5,29 +5,15 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 import logging
 
+from .settings import settings
+
 logger = logging.getLogger(__name__)
 
 # Database configuration
 class DatabaseConfig:
     def __init__(self):
-        # Validate required environment variables
-        supabase_url = os.getenv('SUPABASE_URL', '')
-        supabase_service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '')
-        
-        if not supabase_url:
-            raise ValueError("SUPABASE_URL environment variable is required")
-        if not supabase_service_key:
-            raise ValueError("SUPABASE_SERVICE_ROLE_KEY environment variable is required")
-        
-        # Use the pooler host which has IPv4 connectivity
-        db_host = os.getenv('SUPABASE_DB_HOST', 'aws-0-eu-central-1.pooler.supabase.com')
-        db_port = os.getenv('SUPABASE_DB_PORT', '5432')
-        db_user = os.getenv('SUPABASE_DB_USER', 'postgres')
-        db_password = os.getenv('SUPABASE_DB_PASSWORD', supabase_service_key)
-        db_name = os.getenv('SUPABASE_DB_NAME', 'postgres')
-        
         # Build async PostgreSQL connection string using pooler
-        self.database_url = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+        self.database_url = f"postgresql+asyncpg://{settings.SUPABASE_DB_USER}:{settings.SUPABASE_DB_PASSWORD}@{settings.SUPABASE_DB_HOST}:{settings.SUPABASE_DB_PORT}/{settings.SUPABASE_DB_NAME}"
         
         # Create async engine
         self.engine = create_async_engine(
@@ -50,7 +36,7 @@ class DatabaseConfig:
             expire_on_commit=False
         )
         
-        logger.info(f"Database configured with pooler host: {db_host}")
+        logger.info(f"Database configured with pooler host: {settings.SUPABASE_DB_HOST}")
     
     async def health_check(self) -> bool:
         """Check database connectivity for health endpoints"""

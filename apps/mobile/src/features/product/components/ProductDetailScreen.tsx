@@ -18,9 +18,9 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Product } from '../../../types/product';
-import { mockProducts } from '../../../data/mockProducts';
 import { colors } from '../../../styles';
-import { productStyles } from '../styles';
+import { API_URL } from '@/config/api';
+import { productStyles } from '../styles/index';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -40,6 +40,7 @@ interface ProductDetailScreenProps {
 export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(true);
   const [currentSnapPoint, setCurrentSnapPoint] = useState(SNAP_POINTS.CLOSED);
   
@@ -61,22 +62,30 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         setLoading(true);
         setProduct(null);
         setImageLoading(true);
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 300));
+        setError(null);
 
-        if (abortController.signal.aborted) {
-          return;
+        const response = await fetch(`${API_URL}/products/${id}`, {
+          signal: abortController.signal,
+        });
+
+        if (abortController.signal.aborted) return;
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Product not found.');
+          }
+          throw new Error('Failed to load product details.');
         }
         
-        const foundProduct = mockProducts.find(p => p.id === String(id));
+        const foundProduct: Product = await response.json();
         
         if (!abortController.signal.aborted) {
-          setProduct(foundProduct || null);
+          setProduct(foundProduct);
         }
-      } catch (error) {
+      } catch (error: any) {
         if (!abortController.signal.aborted) {
           console.error('Failed to load product:', error);
+          setError(error.message || 'An unexpected error occurred.');
           setProduct(null);
         }
       } finally {
@@ -271,35 +280,34 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
 
   if (loading) {
     return (
-      <SafeAreaView style={productStyles.container}>
-        <View style={productStyles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={productStyles.loadingText}>Loading...</Text>
-        </View>
-      </SafeAreaView>
+      <View style={productStyles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={productStyles.loadingText}>Loading Product...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={productStyles.centered}>
+        <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+        <Text style={productStyles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={() => router.back()} style={productStyles.backButton}>
+          <Text style={productStyles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   if (!product) {
     return (
-      <SafeAreaView style={productStyles.container}>
-        <View style={productStyles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color={colors.textSecondary} />
-          <Text style={productStyles.errorText}>Product not found</Text>
-          <TouchableOpacity 
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              }
-            }} 
-            style={productStyles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={productStyles.backButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <View style={productStyles.centered}>
+        <Ionicons name="search-outline" size={48} color={colors.textSecondary} />
+        <Text style={productStyles.errorText}>Product could not be found.</Text>
+         <TouchableOpacity onPress={() => router.back()} style={productStyles.backButton}>
+          <Text style={productStyles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
@@ -345,10 +353,10 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         )}
-        <Image 
-          source={{ uri: product.image_url }} 
-          style={productStyles.productImage}
-          resizeMode="cover"
+        <Image
+          style={productStyles.productDetailImage}
+          source={{ uri: product.image_url }}
+          onLoadStart={() => setImageLoading(true)}
           onLoadEnd={() => setImageLoading(false)}
           onError={(e) => {
             console.error('[Image] Load Error:', e.nativeEvent.error);

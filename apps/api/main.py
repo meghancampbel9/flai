@@ -11,6 +11,8 @@ import asyncio
 from contextlib import asynccontextmanager
 from app.routers.pinterest_gemini import router as pinterest_router
 from app.routers.users import router as users_router
+from app.routers.scraping import router as scraping_router
+from app.routers.products import router as products_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -148,10 +150,12 @@ async def health_check():
             "error": str(e)
         }
 
-app.include_router(pinterest_router, prefix="/api/v1")
-app.include_router(users_router, prefix="/api/v1")
-logger.info("✅ Pinterest router loaded successfully")
-logger.info("✅ Users router loaded successfully")
+app.include_router(pinterest_router, prefix="/api/v1/pinterest", tags=["Pinterest & AI Analysis"])
+app.include_router(users_router, prefix="/api/v1/users", tags=["Users & Profiles"])
+app.include_router(scraping_router, prefix="/api/v1/scraping", tags=["Web Scraping"])
+app.include_router(products_router, prefix="/api/v1/products", tags=["Products"])
+
+logger.info("✅ Routers loaded successfully")
 logger.info("🚀 Flai API v2.0.0 wih SQLAlchemy + Supabase ready!")
 
 if __name__ == "__main__":
