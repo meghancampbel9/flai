@@ -27,5 +27,15 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@react-navigation/native": "^7.1.10",
+    "expo-router": "^5.0.7"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "19.0.0",
+      "react-native-renderer": "19.0.0"
+    }
   }
 }

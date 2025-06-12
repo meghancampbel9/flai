@@ -14,13 +14,14 @@ import {
   ActivityIndicator,
   Platform
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Product } from '../../../types/product';
 import { colors } from '../../../styles';
 import { API_URL } from '@/config/api';
 import { productStyles } from '../styles/index';
+import { addToCart, addToWishlist } from '../../../services/shopService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -30,25 +31,21 @@ const SNAP_POINTS = {
   FULL: 100,
 };
 
-const VELOCITY_THRESHOLD = 0.5; // Increase for less sensitive swipes
-const HANDLE_HEIGHT = 50; // Height of draggable handle area
+const VELOCITY_THRESHOLD = 0.5;
+const HANDLE_HEIGHT = 50;
 
-interface ProductDetailScreenProps {
-  id: string;
-}
-
-export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) => {
+export const ProductDetailScreen: React.FC = () => {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(true);
   const [currentSnapPoint, setCurrentSnapPoint] = useState(SNAP_POINTS.CLOSED);
-  
-  // Animation values
+
   const translateY = useRef(new Animated.Value(SNAP_POINTS.CLOSED)).current;
   const scrollViewRef = useRef<ScrollView>(null);
   const isScrolling = useRef(false);
-  
+
   useEffect(() => {
     const abortController = new AbortController();
 
@@ -95,21 +92,39 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
       }
     };
     
-    // Reset panel position and fetch product
     translateY.setValue(SNAP_POINTS.CLOSED);
     setCurrentSnapPoint(SNAP_POINTS.CLOSED);
     fetchProduct();
     
-    // Cleanup function
     return () => {
       abortController.abort();
-      // Cancel any pending animations
       translateY.stopAnimation();
     };
   }, [id, translateY]);
 
+  const handleAddToCart = async () => {
+    if (product) {
+      try {
+        await addToCart(product.id);
+        Alert.alert('Success', 'Added to bag!');
+      } catch (error: any) {
+        Alert.alert('Error', error.message || 'Failed to add to bag.');
+      }
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (product) {
+      try {
+        await addToWishlist(product.id);
+        Alert.alert('Success', 'Added to wishlist!');
+      } catch (error: any) {
+        Alert.alert('Error', error.message || 'Failed to add to wishlist.');
+      }
+    }
+  };
+
   const formatPrice = useCallback((price: number, currency: string) => {
-    // Handle currency symbols vs ISO codes
     const currencyMap: Record<string, string> = {
       '€': 'EUR',
       '$': 'USD',
@@ -147,28 +162,18 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
     });
   }, [translateY]);
 
-  const getClosestSnapPoint = useCallback((y: number) => {
-    'worklet';
-    const snapPoints = [SNAP_POINTS.CLOSED, SNAP_POINTS.FULL];
-    return snapPoints.reduce((prev, curr) => 
-      Math.abs(curr - y) < Math.abs(prev - y) ? curr : prev
-    );
-  }, []);
-
   const panResponder = useMemo(() => 
     PanResponder.create({
       onStartShouldSetPanResponder: () => false, 
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        const isDraggingHandle = evt.nativeEvent.locationY < HANDLE_HEIGHT; // Only fragfrom handle area
-        const isSignificantVerticalMove = Math.abs(gestureState.dy) > 10; // Increased threshold for drag force
+        const isDraggingHandle = evt.nativeEvent.locationY < HANDLE_HEIGHT;
+        const isSignificantVerticalMove = Math.abs(gestureState.dy) > 10;
         const isVerticalGesture = Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
         
-        // When expanded, only allow dragging from handle unless scrolled to top
         if (currentSnapPoint === SNAP_POINTS.FULL) {
           return isDraggingHandle && isSignificantVerticalMove && isVerticalGesture;
         }
         
-        // When not fully expanded, allow dragging from anywhere
         return isSignificantVerticalMove && isVerticalGesture && !isScrolling.current;
       },
       onPanResponderGrant: () => {
@@ -176,10 +181,8 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         translateY.setValue(0);
       },
       onPanResponderMove: (_, gestureState) => {
-        // Only allow dragging down when at full height, or up when not at full
         const newValue = currentSnapPoint + gestureState.dy;
         
-        // Prevent dragging beyond bounds
         if (newValue < SNAP_POINTS.FULL) {
           translateY.setValue(SNAP_POINTS.FULL - currentSnapPoint);
         } else if (newValue > SNAP_POINTS.CLOSED) {
@@ -196,62 +199,29 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         
         let targetSnapPoint;
         
-        // Velocity-based default snap points
         if (Math.abs(vy) > VELOCITY_THRESHOLD) {
-          if (vy > 0) {
-            // Swiping down - always go to closed
-            targetSnapPoint = SNAP_POINTS.CLOSED;
-          } else {
-            // Swiping up - always go to full
-            targetSnapPoint = SNAP_POINTS.FULL;
-          }
+          targetSnapPoint = vy > 0 ? SNAP_POINTS.CLOSED : SNAP_POINTS.FULL;
         } else {
-          // Position-based snapping - snap to closest (closed or full)
           const midPoint = (SNAP_POINTS.CLOSED + SNAP_POINTS.FULL) / 2;
           targetSnapPoint = currentPosition > midPoint ? SNAP_POINTS.CLOSED : SNAP_POINTS.FULL;
         }
         
-        // Haptic feedback on state change
         if (targetSnapPoint !== currentSnapPoint) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
         
         animateToPoint(targetSnapPoint);
       },
-    }), [currentSnapPoint, translateY, getClosestSnapPoint, animateToPoint]
+    }), [currentSnapPoint, translateY, animateToPoint]
   );
 
-  const handleScroll = useCallback((event: any) => {
+  const handleScroll = useCallback((event: React.UIEvent<ScrollView>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const isAtTop = contentOffset.y <= 0;
     const isAtBottom = contentOffset.y >= contentSize.height - layoutMeasurement.height;
     
-    // Only allow panel drag when scrolled to top or bottom
     isScrolling.current = !isAtTop && !isAtBottom;
   }, []);
-
-  const showComingSoonAlert = () => {
-    Alert.alert('Coming Soon', 'This functionality is under development.');
-  };
-
-  const handleAddToCart = useCallback(() => {
-    showComingSoonAlert();
-  }, []);
-
-  const handleToggleWishlist = useCallback(() => {
-    showComingSoonAlert();
-  }, []);
-
-  const handleShare = useCallback(async () => {
-    if (!product) return;
-    
-    try {
-      // Implement actual share logic
-      Alert.alert('Share', 'Share functionality would go here');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to share product');
-    }
-  }, [product]);
 
   const renderPricing = useCallback(() => {
     if (!product) return null;
@@ -319,7 +289,6 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
     <View style={[productStyles.container, { zIndex: 1000 }]}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Fixed Header */}
       <SafeAreaView style={productStyles.header}>
         <TouchableOpacity 
           onPress={() => {
@@ -333,20 +302,8 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        
-        {/* <View style={productStyles.headerActions}>
-          <TouchableOpacity 
-            accessibilityRole="button"
-            accessibilityLabel="View cart"
-            style={productStyles.headerButton}
-            onPress={showComingSoonAlert}
-          >
-            <Ionicons name="cart-outline" size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View> */}
       </SafeAreaView>
 
-      {/* Product Image - Behind the panel */}
       <View style={productStyles.imageContainer}>
         {imageLoading && (
           <View style={productStyles.imageLoadingContainer}>
@@ -360,13 +317,12 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
           onLoadEnd={() => setImageLoading(false)}
           onError={(e) => {
             console.error('[Image] Load Error:', e.nativeEvent.error);
-            setImageLoading(false); // Important: stop loading on error
+            setImageLoading(false);
           }}
           accessibilityLabel={`${product.name} image`}
         />
       </View>
 
-      {/* Draggable Bottom Panel */}
        <Animated.View 
         style={[productStyles.bottomPanel, animatedStyle]}
          {...panResponder.panHandlers}
@@ -374,23 +330,20 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
         accessibilityRole="adjustable"
         accessibilityLabel="Product details panel. Swipe up to expand, swipe down to collapse"
        >
-        {/* Drag Handle */}
         <View style={productStyles.handleContainer}>
            <View style={productStyles.handle} />
         </View>
          
-        {/* Scrollable Content */}
         <ScrollView 
           ref={scrollViewRef}
           style={productStyles.panelScrollView}
           contentContainerStyle={productStyles.panelContent}
           showsVerticalScrollIndicator={false}
           scrollEnabled={currentSnapPoint === SNAP_POINTS.FULL}
-          onScroll={handleScroll}
+          onScroll={handleScroll as any}
           scrollEventThrottle={16}
           bounces={false}
         >
-          {/* Basic Product Info */}
           <View style={productStyles.productHeader}>
             <View style={productStyles.productInfo}>
           <Text style={productStyles.brandName}>{product.brand}</Text>
@@ -399,7 +352,6 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
             </View>
           </View>
           
-          {/* Quick Action Buttons */}
           <View style={productStyles.quickActions}>
             <TouchableOpacity 
               style={productStyles.addToCartButton} 
@@ -411,21 +363,19 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
                 ADD TO BAG
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity 
-              style={productStyles.wishlistButton} 
-              onPress={handleToggleWishlist}
+              style={productStyles.wishlistButton}
+              onPress={handleAddToWishlist}
               accessibilityRole="button"
-              accessibilityLabel={"Add to wishlist"}
+              accessibilityLabel="Add to wishlist"
             >
               <Text style={productStyles.wishlistButtonText}>ADD TO WISHLIST</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Detailed Content - Visible when expanded */}
           {currentSnapPoint !== SNAP_POINTS.CLOSED && (
             <>
-              {/* Size Selector */}
               <View style={productStyles.section}>
                 <Text style={productStyles.sectionTitle}>SELECT SIZE</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={productStyles.sizeSelector}>
@@ -442,7 +392,6 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ id }) 
                 </ScrollView>
               </View>
 
-              {/* Product Details */}
               <View style={productStyles.section}>
                 <Text style={productStyles.sectionTitle}>PRODUCT DETAILS</Text>
                 <Text style={productStyles.description}>

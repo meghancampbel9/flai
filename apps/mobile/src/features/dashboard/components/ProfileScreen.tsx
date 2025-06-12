@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Image, Alert, Share, Modal, Pressable } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Image, Alert, Share, Modal, Pressable, FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,9 +7,10 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { userService, UserProfile } from '@/features/auth/services/userService';
 import { ProductGrid } from '@/features/product/components/ProductGrid';
 import { Product } from '@/types/product';
-import { mockClosetItems, mockWishlistItems } from '@/data/mockProducts';
 import { colors, typography, spacing } from '@/styles';
 import { dashboardStyles } from '../styles';
+import { useFocusEffect } from '@react-navigation/native';
+import { getWishlistItems, getClosetItems } from '../../../services/shopService';
 
 type TabType = 'closet' | 'wishlist';
 
@@ -19,29 +20,38 @@ export const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('closet');
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [closetItems, setClosetItems] = useState<Product[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+  const [profile, setProfile] = useState<any>(null);
 
-  // Mock data for now - replace with actual data later
-  const [closetItems] = useState<Product[]>(mockClosetItems);
-  const [wishlistItems] = useState<Product[]>(mockWishlistItems);
-
-  // Fetch user profile
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.id) return;
-      
-      try {
+  useFocusEffect(
+    useCallback(() => {
+      const loadAllData = async () => {
+        if (!user?.id) {
+          setLoading(false);
+          return;
+        }
         setLoading(true);
-        const profile = await userService.getUserProfile(user.id);
-        setUserProfile(profile);
-      } catch (error) {
-        Alert.alert('Error', 'Failed to load profile data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+        try {
+          const [profileData, closetData, wishlistData] = await Promise.all([
+            userService.getUserProfile(user.id),
+            getClosetItems(),
+            getWishlistItems(),
+          ]);
+          setUserProfile(profileData);
+          setClosetItems(closetData);
+          setWishlistItems(wishlistData);
+        } catch (error) {
+          Alert.alert('Error', 'Failed to load profile data.');
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    fetchUserData();
-  }, [user?.id]);
+      loadAllData();
+    }, [user?.id])
+  );
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -204,6 +214,10 @@ export const ProfileScreen: React.FC = () => {
   const renderGrid = () => {
     const items = activeTab === 'closet' ? closetItems : wishlistItems;
     
+    if (loading) {
+      return <ActivityIndicator size="large" color={colors.primary} />;
+    }
+
     return (
       <View style={dashboardStyles.gridWrapper}>
         <ProductGrid
@@ -218,19 +232,17 @@ export const ProfileScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={dashboardStyles.screenContainer}>
-        <View style={[dashboardStyles.contentContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView style={[dashboardStyles.screenContainer, { justifyContent: 'center', alignItems: 'center' }]} edges={['top']}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[typography.body, { marginTop: spacing.md, color: colors.textSecondary }]}>
             Loading profile...
           </Text>
-        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={dashboardStyles.screenContainer}>
+    <SafeAreaView style={dashboardStyles.screenContainer} edges={['top']}>
       <ScrollView style={dashboardStyles.profileContainer} showsVerticalScrollIndicator={false}>
         {renderHeader()}
         {renderTabs()}
@@ -274,4 +286,4 @@ export const ProfileScreen: React.FC = () => {
       </Modal>
     </SafeAreaView>
   );
-}; 
+};

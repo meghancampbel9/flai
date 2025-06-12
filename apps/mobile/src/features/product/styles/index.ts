@@ -145,40 +145,45 @@ export const productStyles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   productInfo: {
-    paddingTop: spacing.sm,
-    marginBottom: 1,
+    flex: 1,
+    flexDirection: 'column',
+    padding: spacing.sm,
   },
-  brandName: {
+  productInfoGrow: {
+    flex: 1,
+  },
+  productBrandName: {
     ...typography.caption,
     color: colors.textSecondary,
+    fontSize: 10,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 1,
   },
   productName: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: colors.text,
     lineHeight: 16,
-    marginBottom: 2,
   },
-  pricingContainer: {
+  productPricingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
+    marginTop: 'auto',
   },
-  price: {
-    ...typography.h3,
-    color: colors.text,
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  salePrice: {
-    ...typography.h3,
-    color: colors.text,
-    fontWeight: '700',
-  },
-  originalPrice: {
+  productPrice: {
     ...typography.body,
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  productSalePrice: {
+    ...typography.body,
+    fontWeight: '600',
+    fontSize: 12,
+    color: colors.error,
+  },
+  productOriginalPrice: {
+    ...typography.body,
+    fontWeight: 'normal',
+    fontSize: 12,
     color: colors.textSecondary,
     textDecorationLine: 'line-through',
   },
@@ -261,46 +266,33 @@ export const productStyles = StyleSheet.create({
 
   // ProductCard styles
   productCard: {
-    width: (screenWidth - spacing.lg * 2 - spacing.sm * 2) / 3, // 3 columns with margins and gaps
-    marginBottom: spacing.lg,
+    flex: 1,
+    margin: 4,
+    backgroundColor: '#fff',
+    maxWidth: (screenWidth - spacing.lg * 2 - 24) / 3,
   },
   productImageContainer: {
-    position: 'relative',
     width: '100%',
-    aspectRatio: 0.75, // 3:4 ratio typical for fashion photos
+    aspectRatio: 1,
     backgroundColor: colors.backgroundSecondary,
-    borderRadius: spacing.borderRadius.xs,
     overflow: 'hidden',
   },
-  productBrandName: {
-    ...typography.caption,
-    color: colors.text,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  productPrice: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  productPricingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  productSalePrice: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  productOriginalPrice: {
+  brandName: {
     ...typography.caption,
     color: colors.textSecondary,
-    fontWeight: '400',
-    fontSize: 12,
-    textDecorationLine: 'line-through',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 1,
+  },
+  productDetailName: {
+    ...typography.h2,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  pricingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
 
   // ProductGrid styles

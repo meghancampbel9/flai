@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Product } from '../../../types/product';
-import { productStyles } from '../styles';
+import { productStyles } from '../styles/index';
 
 interface ProductCardProps {
   product: Product;
@@ -29,9 +29,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
     } else {
       // Show regular price
       return (
-        <Text style={productStyles.productPrice}>
-          {formatPrice(product.price, product.currency)}
-        </Text>
+        <View style={productStyles.productPricingContainer}>
+          <Text style={productStyles.productPrice}>
+            {formatPrice(product.price, product.currency)}
+          </Text>
+        </View>
       );
     }
   };
@@ -51,12 +53,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
       </View>
       
       <View style={productStyles.productInfo}>
-        <Text style={productStyles.productBrandName} numberOfLines={1}>
-          {product.brand}
-        </Text>
-        <Text style={productStyles.productName} numberOfLines={2}>
-          {product.name}
-        </Text>
+        <View style={productStyles.productInfoGrow}>
+          <Text style={productStyles.productBrandName} numberOfLines={1}>
+            {product.brand}
+          </Text>
+          <Text style={productStyles.productName} numberOfLines={2}>
+            {product.name}
+          </Text>
+        </View>
         {renderPricing()}
       </View>
     </TouchableOpacity>

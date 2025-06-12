@@ -21,7 +21,7 @@ export const HomeScreen: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`${API_URL}/products?limit=1000`);
+        const response = await fetch(`${API_URL}/products?limit=500`);
         if (!response.ok) {
           throw new Error(`Failed to fetch products: ${response.statusText}`);
         }
@@ -56,7 +56,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={dashboardStyles.screenContainer}>
+    <SafeAreaView style={dashboardStyles.screenContainer} edges={['top']}>
       <KeyboardAvoidingView 
         style={dashboardStyles.homeContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -70,7 +70,7 @@ export const HomeScreen: React.FC = () => {
               style={dashboardStyles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search products..."
+              placeholder="Type what you're looking for..."
               placeholderTextColor={colors.textMuted}
               autoCapitalize="none"
               autoCorrect={false}

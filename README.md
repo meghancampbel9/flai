@@ -8,14 +8,18 @@ An intelligent style analysis platform built with React Native Expo and FastAPI,
 - **🎨 Pinterest Analysis**: AI-powered analysis of Pinterest boards using Google Gemini Vision
 - **🔍 Vector Search**: Advanced similarity search using pgvector embeddings
 - **💅 Style Recommendations**: Personalized style suggestions based on analyzed images
+- **🛍️ Shopping Features**: Integrated cart, wishlist, and personal closet for a seamless shopping experience.
+- **🤖 Automated Product Discovery**: AI-powered web scraping to automatically discover and import products from e-commerce sites.
 - **📊 Real-time Profile**: Dynamic user profiles with style preferences
 - **🔄 Live Updates**: Update Pinterest boards with automatic re-analysis
 
 ## 🏗️ Architecture
 
+The Flai platform uses an API-centric design with a React Native mobile app communicating with a Python FastAPI backend for all business logic and data operations.
+
 - **Frontend**: React Native Expo (iOS & Android)
-- **Backend**: Python FastAPI with async support
-- **Database**: Supabase (PostgreSQL) with pgvector for embeddings
+- **Backend**: Python FastAPI with async support, serving as the primary interface for the mobile app.
+- **Database**: Supabase (PostgreSQL) with pgvector for embeddings. The database is primarily accessed via the FastAPI backend.
 - **AI/ML**: Google Gemini Vision API + LangChain for image analysis
 - **Authentication**: Supabase Auth with phone number verification
 - **Monorepo**: Turborepo with PNPM workspaces
@@ -27,8 +31,9 @@ flai/
 ├── 📱 apps/
 │   ├── mobile/          # React Native Expo app
 │   │   ├── src/features/
-│   │   │   ├── auth/           # Authentication flow
+│   │   │   ├── auth/           # Authentication / ONboarding flow
 │   │   │   ├── dashboard/      # Main app screens
+│   │   │   ├── shop/           # Cart, Wishlist, Closet
 │   │   │   └── landing/        # Landing page
 │   │   └── app/               # Expo Router navigation
 │   └── api/             # Python FastAPI backend
@@ -80,6 +85,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Google AI Services
 GOOGLE_API_KEY=your_google_gemini_api_key
+
+# Firecrawl for Web Scraping
+FIRECRAWL_API_KEY=your_firecrawl_api_key
 ```
 
 **Mobile app `.env` (apps/mobile/.env):**
@@ -224,21 +232,44 @@ auth.users (id, phone, created_at)
 user_profiles (id, username, phone_number, onboarding_completed, pinterest_board_analyzed)
 
 -- Analyzed images with vector embeddings
-analyzed_images (id, user_id, image_url, image_embedding, style_embedding, 
+analyzed_images (id, user_id, image_url, image_embedding, style_embedding,
                 detected_styles, detected_colors, dominant_mood, aesthetic_score)
+
+-- Shopping features
+products (id, name, brand, price, description, image_url)
+cart_items (user_id, product_id, quantity, added_at)
+wishlist_items (user_id, product_id, added_at)
+closet_items (user_id, product_id, added_at)
 ```
 
 ## 📊 API Endpoints
 
+All business logic is handled through the FastAPI backend.
+
 ### Authentication & Users
-- `GET /api/v1/users/profile/{user_id}` - Get user profile
 - `POST /api/v1/users/profile` - Create user profile
-- `POST /api/v1/users/profile/{user_id}/complete-onboarding` - Complete onboarding (platform-agnostic)
+- `GET /api/v1/users/profile/{user_id}` - Get user profile
+- `POST /api/v1/users/profile/{user_id}/complete-onboarding` - Complete onboarding
 - `POST /api/v1/users/profile/{user_id}/pinterest-board` - Link/update Pinterest board
 
 ### Pinterest Analysis
 - `POST /api/v1/pinterest/analyze-board` - Analyze Pinterest board
 - `GET /api/v1/pinterest/analyzed-images/{user_id}` - Get user's analyzed images
+
+### Product Catalog & Scraping
+- `POST /api/v1/scrape-products` - Initiate a background job to scrape and populate products.
+- `GET /api/v1/products` - Retrieve a list of all available products.
+- `GET /api/v1/products/{product_id}` - Retrieve a single product by its ID.
+
+### Shop Features
+- `GET /api/v1/shop/cart/{user_id}/items` - Get all items in a user's cart
+- `POST /api/v1/shop/cart/{user_id}/items` - Add an item to the cart
+- `DELETE /api/v1/shop/cart/{user_id}/items/{product_id}` - Remove an item from the cart
+- `POST /api/v1/shop/cart/{user_id}/checkout` - Move cart items to the closet and clear the cart
+- `GET /api/v1/shop/wishlist/{user_id}/items` - Get all items in a user's wishlist
+- `POST /api/v1/shop/wishlist/{user_id}/items` - Add an item to the wishlist
+- `DELETE /api/v1/shop/wishlist/{user_id}/items/{product_id}` - Remove an item from the wishlist
+- `GET /api/v1/shop/closet/{user_id}/items` - Get all items in a user's closet
 
 ### Utility
 - `GET /health` - Health check
@@ -248,16 +279,35 @@ analyzed_images (id, user_id, image_url, image_embedding, style_embedding,
 ```mermaid
 graph TD
     A[Pinterest Board URL] --> B[Extract Images via RSS]
-    B --> C[Google Gemini Vision Analysis]
-    C --> D[Generate Style Keywords]
-    C --> E[Extract Color Palette]
-    C --> F[Identify Themes & Mood]
-    D --> G[Generate Vector Embeddings]
-    E --> G
-    F --> G
-    G --> H[Store in pgvector Database]
-    H --> I[Enable Similarity Search]
-    I --> J[Personalized Recommendations]
+    B --> C{Gemini Vision API}
+    C --> D[Analyze Style & Generate Embeddings]
+    D --> E[Store in Supabase pgvector]
+    E --> F[Display on User Dashboard]
+    F --> G[Power Recommendations]
+```
+
+## 🛍️ Product Generation & Web Scraping
+
+The platform includes a powerful, automated pipeline for discovering and populating the product catalog from external e-commerce websites. This process is handled by a dedicated background service.
+
+### Workflow
+1.  **Initiation**: A scraping job is started by sending a list of category or brand URLs to the `/api/v1/scrape-products` endpoint.
+2.  **Product URL Extraction**: `Firecrawl` is used to crawl the initial URLs and intelligently extract individual product page URLs.
+3.  **Structured Data Extraction**: For each product URL, an LLM-powered extraction process (using `Firecrawl`) pulls structured data like name, price, description, and images based on a predefined schema.
+4.  **Image Embedding**: The primary image for each new product is downloaded, and a 768-dimensional vector embedding is generated using the Google AI API. This embedding represents the visual characteristics of the product.
+5.  **Database Storage**: The product details, along with their new image embedding, are saved to the `products` table in the database.
+
+This automated pipeline ensures a rich and continuously updated product catalog for style analysis and recommendations.
+
+```mermaid
+graph TD
+    A[Brand/Category URLs] --> B{/api/v1/scrape-products};
+    B --> C[Background Scraping Task];
+    C --> D[Firecrawl: Extract Product URLs];
+    D --> E[Firecrawl: Extract Structured Details];
+    E --> F[Download Product Image];
+    F --> G{Google AI API: Generate Embedding};
+    G --> H[Save Product + Embedding to DB];
 ```
 
 ## 🚢 Deployment
