@@ -274,15 +274,6 @@ All business logic is handled through the FastAPI backend.
 ### Utility
 - `GET /health` - Health check
 
-### Example to scrape product data with curl
-curl -X POST http://localhost:8000/api/v1/scraping/scrape-products -H "Content-Type: application/json" -d '{
-  "urls": [
-    "https://us.vestiairecollective.com/women-clothing/trousers/#categoryParent=Clothing%232_category=2%20%3E%20Trousers%2318_gender=Women%231"
-  ],
-  "limit_per_url": 18
-}'
-
-
 ## 🎨 Style Analysis Pipeline
 
 ```mermaid
@@ -385,7 +376,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Reset user onboarding:**
 ```bash
 # Delete user from auth.users and user_profiles tables
-# User will go through onboarding flow again
+# cd apps/mobile
+# run cache cleanup script ./clear-app-data.sh
 ```
 
 **Test with sample Pinterest boards:**
@@ -398,6 +390,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 curl -X POST "http://localhost:8000/api/v1/pinterest/generate-embedding" \
   -H "Content-Type: application/json" \
   -d '{"text":"modern minimalist design"}'
+```
+
+**Scrape product data:**
+```bash
+# Use the scrape product data from fashion ecommerce websites
+curl -X POST http://localhost:8000/api/v1/scraping/scrape-products -H "Content-Type: application/json" -d '{
+  "urls": [
+    "https://us.vestiairecollective.com/women-clothing/trousers/#categoryParent=Clothing%232_category=2%20%3E%20Trousers%2318_gender=Women%231"
+  ],
+  "limit_per_url": 18
+}'
 ```
 
 For more help, open an issue or check the API documentation at `/docs`.
