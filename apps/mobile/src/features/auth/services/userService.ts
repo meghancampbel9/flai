@@ -2,12 +2,11 @@ import { supabase } from '@/config/supabase';
 import { Platform } from 'react-native';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_TIMEOUT = 8000; // 8 seconds
 
 const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    console.log("session",`${session}`)
     if (!session) throw new Error("User not authenticated");
-    console.log("no error returning",`${session}`)
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`
@@ -94,27 +93,43 @@ export const userService = {
   async getUserProfile(): Promise<UserProfile> {
     try {
       const headers = await getAuthHeader();
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, API_TIMEOUT);
+      
       const response = await fetch(`${API_URL}/api/v1/users/profile`, {
         method: 'GET',
         headers: headers,
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         if (response.status === 404) {
-          // This is expected during first-time signup - don't log as error
           throw new Error('PROFILE_NOT_FOUND');
         }
-        throw new Error(`API error: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorText}`);
       }
 
       const profile = await response.json();
-      console.log('✅ User profile fetched successfully');
       return profile;
     } catch (error) {
-      if (error instanceof Error && error.message === 'PROFILE_NOT_FOUND') {
-        throw error;
+      if (error instanceof Error) {
+        if (error.message === 'PROFILE_NOT_FOUND') {
+          throw error;
+        }
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - please check your connection');
+        }
+        if (error.message.includes('Network request failed')) {
+          throw new Error('Network request failed');
+        }
       }
-      console.error('❌ Failed to fetch user profile:', error);
+      
       throw error;
     }
   },

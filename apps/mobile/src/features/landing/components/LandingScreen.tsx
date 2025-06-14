@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import { router, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { landingStyles } from '../styles';
 import { Button } from '@/components';
 
@@ -24,49 +25,25 @@ export const LandingScreen: React.FC = () => {
     player.play();
   });
 
-  // Add error handling for video player and ensure continuous looping
-  useEffect(() => {
-    if (player) {
-      console.log('🎬 Video player initialized');
-      const keepPlaying = () => {
-        if (player.status === 'idle' || player.status === 'error') {
-          player.play();
-        }
-      };
-      const interval = setInterval(keepPlaying, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [player]);
-
   useEffect(() => {
     if (loading) return;
-    if (pathname.startsWith('/auth/')) return; 
-    if (session && onboardingCompleted) {
-      console.log('🏠 LandingPage - Authenticated user with completed onboarding, redirecting to dashboard');
+    if (pathname.startsWith('/auth/')) return;
+    
+    if (session && onboardingCompleted === true) {
       router.replace('/dashboard');
     } else if (session && onboardingCompleted === false) {
-      console.log('🏠 LandingPage - Authenticated user needs to complete onboarding, redirecting to welcome');
       router.replace('/auth/welcome');
     }
   }, [session, loading, onboardingCompleted, pathname]);
 
   const handleGetStarted = () => {
-    console.log('🏠 LandingPage - Get Started clicked');
     router.push('/auth/phone');
   };
 
-  // Show loading while checking auth state
+  // Show loading screen while checking auth state
   if (loading) {
-    return (
-      <SafeAreaView style={landingStyles.container}>
-        <View style={landingStyles.loadingContainer}>
-          <Text style={landingStyles.loadingText}>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Setting up your experience..." />;
   }
-
-
 
   return (
     <SafeAreaView style={landingStyles.container}>

@@ -3,12 +3,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/features/auth/stores/AuthContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 function RootLayoutNav() {
   const { session, loading, onboardingCompleted } = useAuth();
 
   if (loading) {
-    return null;
+    return <LoadingScreen/>;
   }
 
   return (
@@ -34,8 +35,8 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
         <RootLayoutNav />
+        <StatusBar style="auto" />
       </AuthProvider>
     </SafeAreaProvider>
   );

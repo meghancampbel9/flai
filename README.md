@@ -376,7 +376,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Reset user onboarding:**
 ```bash
 # Delete user from auth.users and user_profiles tables
-# cd apps/mobile
+r# cd apps/mobile/scripts
 # run cache cleanup script ./clear-app-data.sh
 ```
 
