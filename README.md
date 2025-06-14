@@ -274,6 +274,15 @@ All business logic is handled through the FastAPI backend.
 ### Utility
 - `GET /health` - Health check
 
+### Example to scrape product data with curl
+curl -X POST http://localhost:8000/api/v1/scraping/scrape-products -H "Content-Type: application/json" -d '{
+  "urls": [
+    "https://us.vestiairecollective.com/women-clothing/trousers/#categoryParent=Clothing%232_category=2%20%3E%20Trousers%2318_gender=Women%231"
+  ],
+  "limit_per_url": 18
+}'
+
+
 ## 🎨 Style Analysis Pipeline
 
 ```mermaid

@@ -150,7 +150,7 @@ export const PinterestScreen: React.FC = () => {
         try {
           const fullUrl = constructPinterestUrl(userInput);
           console.log('📌 Linking Pinterest board to user profile...');
-          await userService.updatePinterestBoard(user.id, fullUrl);
+          await userService.updatePinterestBoard(fullUrl);
           console.log('✅ Pinterest board linked successfully');
         } catch (error) {
           console.error('⚠️ Failed to link Pinterest board:', error);
@@ -164,7 +164,7 @@ export const PinterestScreen: React.FC = () => {
       if (user?.id) {
         try {
           console.log('🎓 Completing onboarding...');
-          await userService.completeOnboarding(user.id);
+          await userService.completeOnboarding();
           console.log('✅ Onboarding completed in database');
         } catch (error) {
           console.error('⚠️ Failed to complete onboarding in database:', error);
