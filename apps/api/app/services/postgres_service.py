@@ -155,6 +155,7 @@ class PostgresService:
                 query = text("""
                     SELECT id, username, display_name, bio, avatar_url, phone_number,
                            onboarding_completed, pinterest_board_analyzed, 
+                           followers_count, following_count,
                            created_at, updated_at
                     FROM user_profiles 
                     WHERE id = :user_id
@@ -175,6 +176,8 @@ class PostgresService:
                     'phone_number': row.phone_number,
                     'onboarding_completed': row.onboarding_completed,
                     'pinterest_board_analyzed': row.pinterest_board_analyzed,
+                    'followers_count': row.followers_count or 0,
+                    'following_count': row.following_count or 0,
                     'created_at': row.created_at.isoformat() if row.created_at else None,
                     'updated_at': row.updated_at.isoformat() if row.updated_at else None
                 }

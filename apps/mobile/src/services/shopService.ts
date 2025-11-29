@@ -1,22 +1,42 @@
 import { supabase } from '../config/supabase';
 import { Product } from '../types/product';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // Helper functions to get user ID and auth headers
 const getUserId = async (): Promise<string> => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
-    return user.id;
+    if (user) return user.id;
+    
+    // Fall back to dev mode
+    const devMode = await AsyncStorage.getItem('devMode');
+    if (devMode === 'true') return DEV_USER_ID;
+    
+    throw new Error("User not authenticated");
 };
 
 const getAuthHeader = async () => {
+    // First try to get real Supabase session
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("User not authenticated");
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-    };
+    if (session) {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+        };
+    }
+    
+    // Fall back to dev mode token
+    const devMode = await AsyncStorage.getItem('devMode');
+    if (devMode === 'true') {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer dev-token'
+        };
+    }
+    
+    throw new Error("User not authenticated");
 };
 
 export const getCartItems = async (): Promise<Product[]> => {

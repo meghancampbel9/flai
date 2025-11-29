@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import { View, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,6 +64,10 @@ export const HomeScreen: React.FC = () => {
     router.push(`/product/${product.id}`);
   };
 
+  const handleUserSearchPress = () => {
+    router.push('/user-search');
+  };
+
   return (
     <SafeAreaView style={dashboardStyles.screenContainer} edges={['top']}>
       <KeyboardAvoidingView 
@@ -94,6 +98,12 @@ export const HomeScreen: React.FC = () => {
               />
             )}
           </View>
+          <TouchableOpacity
+            style={dashboardStyles.userSearchButton}
+            onPress={handleUserSearchPress}
+          >
+            <Ionicons name="people" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
         </View>
 
         {/* Product Grid */}

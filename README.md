@@ -113,6 +113,14 @@ pnpm dev
 # Or start services individually:
 pnpm dev:mobile    # React Native Expo
 pnpm dev:api       # FastAPI backend
+
+# Alternatively
+# Start react expo 
+npx expo start --clear
+# Start backend
+source venv/bin/activate
+pip install -r requirements.txt
+python3 main.py
 ```
 
 ### 5. Access Applications

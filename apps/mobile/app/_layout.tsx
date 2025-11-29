@@ -27,6 +27,12 @@ function RootLayoutNav() {
 
       {/* If the user is not signed in OR hasn't completed onboarding, redirect them away from the app pages. */}
       <Stack.Screen name="dashboard" redirect={!session || !onboardingCompleted} />
+      
+      {/* User following screens - only accessible when authenticated and onboarded */}
+      <Stack.Screen name="user-search" redirect={!session || !onboardingCompleted} />
+      <Stack.Screen name="user-profile" redirect={!session || !onboardingCompleted} />
+      <Stack.Screen name="user-followers" redirect={!session || !onboardingCompleted} />
+      <Stack.Screen name="user-following" redirect={!session || !onboardingCompleted} />
     </Stack>
   );
 }

@@ -1,22 +1,47 @@
 import { supabase } from '@/config/supabase';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const API_TIMEOUT = 8000; // 8 seconds
+const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 const getAuthHeader = async () => {
+    // First try to get real Supabase session
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("User not authenticated");
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-    };
+    if (session) {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+        };
+    }
+    
+    // Fall back to dev mode token
+    const devMode = await AsyncStorage.getItem('devMode');
+    if (devMode === 'true') {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer dev-token'
+        };
+    }
+    
+    throw new Error("User not authenticated");
 };
 
 const getUserId = async (): Promise<string> => {
+    // First try to get real Supabase session
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session || !session.user) throw new Error("User not authenticated");
-    return session.user.id;
+    if (session?.user) {
+        return session.user.id;
+    }
+    
+    // Fall back to dev mode
+    const devMode = await AsyncStorage.getItem('devMode');
+    if (devMode === 'true') {
+        return DEV_USER_ID;
+    }
+    
+    throw new Error("User not authenticated");
 };
 
 export interface CreateUserProfileRequest {
@@ -294,6 +319,16 @@ export const userService = {
       
       // Get session for auth
       const { data: { session } } = await supabase.auth.getSession();
+      const devMode = await AsyncStorage.getItem('devMode');
+      
+      // Dev mode: Supabase Storage requires real JWT, so skip upload and use cat avatar
+      if (devMode === 'true' && !session) {
+        console.log('⚠️ Dev mode: Profile image upload not supported, using cat avatar');
+        // Return the dev user's cat avatar URL
+        const catAvatarUrl = 'https://yuhnljabfudvevqfglix.supabase.co/storage/v1/object/public/avatars/users/00000000-0000-0000-0000-000000000001/avatar-cat.jpg';
+        return catAvatarUrl;
+      }
+      
       if (!session) throw new Error("User not authenticated");
       
       // Handle platform-specific URI formats

@@ -10,6 +10,8 @@ from app.schemas.product import ProductRead as Product
 
 router = APIRouter(tags=["shop"])
 
+DEV_USER_ID = '00000000-0000-0000-0000-000000000001'
+
 @router.post("/cart/items", status_code=status.HTTP_201_CREATED, response_model=CartItem)
 async def add_item_to_cart(
     cart_item: CartItemCreate,
@@ -17,14 +19,15 @@ async def add_item_to_cart(
     db: AsyncSession = Depends(get_db)
 ):
     async with db.begin():
-        # First check if the user exists in auth.users
-        user_check_query = text("SELECT id FROM auth.users WHERE id = :user_id")
-        user_result = await db.execute(user_check_query, {"user_id": user_id})
-        if not user_result.fetchone():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail=f"User not found. Please ensure you're properly authenticated."
-            )
+        # Skip auth check for dev user, otherwise check auth.users or user_profiles
+        if user_id != DEV_USER_ID:
+            user_check_query = text("SELECT id FROM auth.users WHERE id = :user_id UNION SELECT id FROM user_profiles WHERE id = :user_id")
+            user_result = await db.execute(user_check_query, {"user_id": user_id})
+            if not user_result.fetchone():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, 
+                    detail=f"User not found. Please ensure you're properly authenticated."
+                )
         
         query = text("""
             INSERT INTO cart_items (user_id, product_id, quantity)
@@ -113,14 +116,15 @@ async def add_item_to_wishlist(
     db: AsyncSession = Depends(get_db)
 ):
     async with db.begin():
-        # First check if the user exists in auth.users
-        user_check_query = text("SELECT id FROM auth.users WHERE id = :user_id")
-        user_result = await db.execute(user_check_query, {"user_id": user_id})
-        if not user_result.fetchone():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail=f"User not found. Please ensure you're properly authenticated."
-            )
+        # Skip auth check for dev user, otherwise check auth.users or user_profiles
+        if user_id != DEV_USER_ID:
+            user_check_query = text("SELECT id FROM auth.users WHERE id = :user_id UNION SELECT id FROM user_profiles WHERE id = :user_id")
+            user_result = await db.execute(user_check_query, {"user_id": user_id})
+            if not user_result.fetchone():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, 
+                    detail=f"User not found. Please ensure you're properly authenticated."
+                )
         
         query = text("""
             INSERT INTO wishlist_items (user_id, product_id)

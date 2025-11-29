@@ -12,8 +12,13 @@ logger = logging.getLogger(__name__)
 # Database configuration
 class DatabaseConfig:
     def __init__(self):
-        # Build async PostgreSQL connection string using pooler
-        self.database_url = f"postgresql+asyncpg://{settings.SUPABASE_DB_USER}:{settings.SUPABASE_DB_PASSWORD}@{settings.SUPABASE_DB_HOST}:{settings.SUPABASE_DB_PORT}/{settings.SUPABASE_DB_NAME}"
+        # Use the DATABASE_URL directly, converting to async format
+        database_url = settings.DATABASE_URL
+        if database_url.startswith('postgresql://'):
+            # Convert postgresql:// to postgresql+asyncpg:// for async support
+            database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://', 1)
+        
+        self.database_url = database_url
         
         # Create async engine
         self.engine = create_async_engine(
@@ -36,7 +41,7 @@ class DatabaseConfig:
             expire_on_commit=False
         )
         
-        logger.info(f"Database configured with pooler host: {settings.SUPABASE_DB_HOST}")
+        logger.info(f"Database configured with URL: {database_url.split('@')[1] if '@' in database_url else 'configured'}")
     
     async def health_check(self) -> bool:
         """Check database connectivity for health endpoints"""

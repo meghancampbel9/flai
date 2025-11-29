@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContextType, AuthProviderProps, Session } from '../types';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
@@ -173,7 +174,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signOut = useCallback(async () => {
-    if (session?.user?.id === 'dev-user-id') {
+    const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
+    // Clear dev mode flag
+    await AsyncStorage.removeItem('devMode');
+    
+    if (session?.user?.id === DEV_USER_ID) {
       setSession(null);
       setUser(null);
       setOnboardingCompleted(false);
@@ -185,7 +190,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [session]);
 
-  const setDevModeAuth = useCallback(() => {
+  const setDevModeAuth = useCallback(async () => {
+    // Use a valid UUID for dev mode (this is a fixed test UUID)
+    const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
     const mockSession = {
       access_token: 'dev-token',
       refresh_token: 'dev-refresh',
@@ -193,7 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       expires_at: Date.now() + 3600000,
       token_type: 'bearer',
       user: {
-        id: 'dev-user-id',
+        id: DEV_USER_ID,
         email: 'dev@example.com',
         phone: '+491799004465',
         created_at: new Date().toISOString(),
@@ -204,6 +211,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: 'authenticated'
       }
     } as Session;
+    
+    // Store dev mode flag for userService to use
+    await AsyncStorage.setItem('devMode', 'true');
     
     setSession(mockSession);
     setUser(mockSession.user);
