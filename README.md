@@ -1,19 +1,19 @@
-# 🎨 Flai - AI-Powered Style Analysis Platform
+# Flai - AI-Powered Style Analysis Platform
 
 An intelligent style analysis platform built with React Native Expo and FastAPI, featuring AI-powered Pinterest board analysis, vector similarity search, and personalized style recommendations.
 
-## ✨ Features
+## Features
 
-- **📱 Phone Authentication**: Secure SMS-based authentication flow
-- **🎨 Pinterest Analysis**: AI-powered analysis of Pinterest boards using Google Gemini Vision
-- **🔍 Vector Search**: Advanced similarity search using pgvector embeddings
-- **💅 Style Recommendations**: Personalized style suggestions based on analyzed images
-- **🛍️ Shopping Features**: Integrated cart, wishlist, and personal closet for a seamless shopping experience.
-- **🤖 Automated Product Discovery**: AI-powered web scraping to automatically discover and import products from e-commerce sites.
-- **📊 Real-time Profile**: Dynamic user profiles with style preferences
-- **🔄 Live Updates**: Update Pinterest boards with automatic re-analysis
+- **Phone Authentication**: Secure SMS-based authentication flow
+- **Pinterest Analysis**: AI-powered analysis of Pinterest boards using Google Gemini Vision
+- **Vector Search**: Advanced similarity search using pgvector embeddings
+- **Style Recommendations**: Personalized style suggestions based on analyzed images
+- **Shopping Features**: Integrated cart, wishlist, and personal closet for a seamless shopping experience.
+- **Automated Product Discovery**: AI-powered web scraping to automatically discover and import products from e-commerce sites.
+- **Real-time Profile**: Dynamic user profiles with style preferences
+- **Live Updates**: Update Pinterest boards with automatic re-analysis
 
-## 🏗️ Architecture
+## Architecture
 
 The Flai platform uses an API-centric design with a React Native mobile app communicating with a Python FastAPI backend for all business logic and data operations.
 
@@ -24,11 +24,11 @@ The Flai platform uses an API-centric design with a React Native mobile app comm
 - **Authentication**: Supabase Auth with phone number verification
 - **Monorepo**: Turborepo with PNPM workspaces
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 flai/
-├── 📱 apps/
+├── apps/
 │   ├── mobile/          # React Native Expo app
 │   │   ├── src/features/
 │   │   │   ├── auth/           # Authentication / ONboarding flow
@@ -43,14 +43,14 @@ flai/
 │       │   ├── models/         # Database models
 │       │   └── config/         # Configuration
 │       └── supabase/          # Database migrations
-├── 📚 packages/
+├── packages/
 │   ├── eslint-config/   # ESLint configuration
 │   └── typescript-config/ # TypeScript configuration
 ├── docker-compose.yml   # Local development services
 └── turbo.json          # Turborepo configuration
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -129,12 +129,12 @@ python3 main.py
 - **API Documentation**: `http://localhost:8000/docs`
 - **API Health Check**: `http://localhost:8000/health`
 
-## 📱 Authentication Flow
+## Authentication Flow
 
 The app uses a progressive onboarding flow designed for style enthusiasts:
 
 ```
-📞 Phone Entry → 🔐 OTP Verification → 👋 Welcome → 👤 Username → 📌 Pinterest → 🏠 Dashboard
+Phone Entry -> OTP Verification -> Welcome -> Username -> Pinterest -> Dashboard
 ```
 
 ### 1. **Phone Authentication**
@@ -163,7 +163,7 @@ The app uses a progressive onboarding flow designed for style enthusiasts:
 - User gains access to dashboard and full app features
 - Separated from platform linking for future extensibility
 
-## 🤖 AI & Machine Learning Features
+## AI & Machine Learning Features
 
 ### Pinterest Board Analysis
 - **Image Processing**: Automatic image extraction from Pinterest RSS feeds
@@ -183,7 +183,7 @@ The app uses a progressive onboarding flow designed for style enthusiasts:
 - **Color Palette**: Dominant colors in the analyzed images
 - **Themes & Moods**: Emotional and thematic content analysis
 
-## 🛠️ Development Commands
+## Development Commands
 
 ```bash
 # Development
@@ -207,7 +207,7 @@ cd apps/mobile && npx expo run:android # Run on Android emulator
 cd apps/api && python main.py         # Start API directly
 ```
 
-## 🔧 Technology Stack
+## Technology Stack
 
 ### Frontend (React Native Expo)
 - **Framework**: Expo SDK 50+
@@ -250,7 +250,7 @@ wishlist_items (user_id, product_id, added_at)
 closet_items (user_id, product_id, added_at)
 ```
 
-## 📊 API Endpoints
+## API Endpoints
 
 All business logic is handled through the FastAPI backend.
 
@@ -282,7 +282,7 @@ All business logic is handled through the FastAPI backend.
 ### Utility
 - `GET /health` - Health check
 
-## 🎨 Style Analysis Pipeline
+## Style Analysis Pipeline
 
 ```mermaid
 graph TD
@@ -294,7 +294,72 @@ graph TD
     F --> G[Power Recommendations]
 ```
 
-## 🛍️ Product Generation & Web Scraping
+## Virtual Styling
+
+The Styling tab provides an AI-powered virtual try-on experience using Google's Nano Banana model (`gemini-3-pro-image-preview`). Users can chat with an AI stylist to visualize how items from their closet would look on a reference model.
+
+### How It Works
+
+1. **Chat Interface**: Users describe what they want to try on (e.g., "show me in the black silk top" or "change the pants to the blue jeans")
+2. **Smart Item Selection**: The AI understands context and selects only the items that need to change.
+3. **Image Generation**: Nano Banana generates a photorealistic image of the reference model wearing the selected clothing
+4. **LLM Judge Validation**: Before showing results, an LLM judge validates that the generated image preserves the original model's identity, pose, and background
+
+### Key Features
+
+- **Context-Aware Selection**: The system intelligently selects only the minimum items needed based on the user's request
+- **RAG-Powered Matching**: Uses vector embeddings to find the best matching items from the user's closet
+- **Identity Preservation**: Strict constraints ensure the base model's face, hair, pose, and background remain unchanged
+- **Quality Validation**: An LLM judge scores generated images on 6 criteria (face, hair, skin tone, pose, background, lighting) - images scoring below 7/10 on any criterion are rejected
+
+### API Endpoints
+
+- `POST /api/v1/styling/session` - Create a new styling session
+- `POST /api/v1/styling/chat` - Send a styling request and receive generated image
+- `GET /api/v1/styling/history/{session_id}` - Get chat history for a session
+- `DELETE /api/v1/styling/session/{session_id}` - Clear a session
+
+### Architecture
+
+```
++--------------------------------+
+|   User Intent Detection (LLM)  |
++-------------+------------------+
+              |
+              v
++---------------------------+
+|     Closet Retrieval      |
+|   (Vector DB / RAG)       |
++-------------+-------------+
+              |
+              v
++---------------------------+
+|   Base Model Loader       |
++-------------+-------------+
+              |
+              v
++---------------------------+
+|  Clothing Image Fetcher   |
++-------------+-------------+
+              |
+              v
++---------------------------+
+|  Try-On Generator (Model) |
++-------------+-------------+
+              |
+              v
++---------------------------+
+|   Output Validation LLM   |
++-------------+-------------+
+       |                 |
+   Pass v             Fail v
++----------+       +----------+
+| Try-On   |       | Fallback |
+|  Result  |       |  Image   |
++----------+       +----------+
+```
+
+## Product Generation & Web Scraping
 
 The platform includes a powerful, automated pipeline for discovering and populating the product catalog from external e-commerce websites. This process is handled by a dedicated background service.
 
@@ -318,7 +383,7 @@ graph TD
     G --> H[Save Product + Embedding to DB];
 ```
 
-## 🚢 Deployment
+## Deployment
 
 ### Mobile App (Expo)
 ```bash
@@ -341,33 +406,33 @@ npx eas build --platform android
 docker build -t flai-api ./apps/api
 ```
 
-## 📱 Mobile App Features
+## Mobile App Features
 
 ### Core Screens
-- **🏠 Landing**: Welcome and authentication entry point
-- **📞 Phone**: Phone number entry with country code selection
-- **🔐 Verify**: SMS code verification
-- **👋 Welcome**: App introduction and features overview
-- **👤 Username**: Username selection and profile creation
-- **📌 Pinterest**: Pinterest board URL entry and analysis
-- **🏠 Dashboard**: Main app with tabs (Home, Search, Cart, Profile)
+- **Landing**: Welcome and authentication entry point
+- **Phone**: Phone number entry with country code selection
+- **Verify**: SMS code verification
+- **Welcome**: App introduction and features overview
+- **Username**: Username selection and profile creation
+- **Pinterest**: Pinterest board URL entry and analysis
+- **Dashboard**: Main app with tabs (Home, Search, Cart, Profile)
 
 ### Dashboard Tabs
-- **🏠 Home**: Style analysis results and recommendations
-- **🔍 Search**: Vector-powered image and style search
-- **🛒 Cart**: Placeholder for future e-commerce features
-- **👤 Profile**: User profile management and Pinterest board updates
+- **Home**: Style analysis results and recommendations
+- **Search**: Vector-powered image and style search
+- **Cart**: Placeholder for future e-commerce features
+- **Profile**: User profile management and Pinterest board updates
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
-- **🛍️ E-commerce Integration**: Product recommendations based on style analysis
-- **📸 Camera Integration**: Analyze photos taken with phone camera
-- **🤝 Social Features**: Share style profiles and boards with friends
-- **🎯 Advanced Filters**: Filter recommendations by color, style, price range
-- **📈 Analytics**: Style evolution tracking over time
-- **🔗 Multi-Platform**: Support for Instagram, TikTok, and other visual platforms
+- **E-commerce Integration**: Product recommendations based on style analysis
+- **Camera Integration**: Analyze photos taken with phone camera
+- **Social Features**: Share style profiles and boards with friends
+- **Advanced Filters**: Filter recommendations by color, style, price range
+- **Analytics**: Style evolution tracking over time
+- **Multi-Platform**: Support for Instagram, TikTok, and other visual platforms
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/style-enhancement`)
@@ -375,7 +440,7 @@ docker build -t flai-api ./apps/api
 4. Push to the branch (`git push origin feature/style-enhancement`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -414,5 +479,3 @@ curl -X POST http://localhost:8000/api/v1/scraping/scrape-products -H "Content-T
 For more help, open an issue or check the API documentation at `/docs`.
 
 ---
-
-**Built with ❤️ for style enthusiasts and AI researchers**
