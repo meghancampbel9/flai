@@ -1,15 +1,29 @@
 import { supabase } from '../config/supabase';
 import { Product } from '../types/product';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const getAuthHeader = async () => {
+    // First try to get real Supabase session
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("User not authenticated");
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-    };
+    if (session) {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+        };
+    }
+    
+    // Fall back to dev mode token
+    const devMode = await AsyncStorage.getItem('devMode');
+    if (devMode === 'true') {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer dev-token'
+        };
+    }
+    
+    throw new Error("User not authenticated");
 };
 
 export const getStyleRecommendations = async (

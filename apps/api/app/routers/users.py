@@ -31,6 +31,8 @@ class UserProfile(BaseModel):
     shopping_preference: Optional[str] = None
     onboarding_completed: bool
     pinterest_board_analyzed: Optional[str] = None
+    followers_count: int = 0
+    following_count: int = 0
     created_at: str
     updated_at: str
 

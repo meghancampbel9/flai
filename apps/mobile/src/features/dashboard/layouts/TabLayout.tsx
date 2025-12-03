@@ -26,6 +26,15 @@ export const TabLayout: React.FC = () => {
         }}
       />
       <Tabs.Screen
+        name="styling"
+        options={{
+          title: 'Style',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="sparkles-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="cart"
         options={{
           title: 'Cart',

@@ -442,11 +442,15 @@ export const dashboardStyles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.background,
+    gap: spacing.sm,
   },
   searchInputContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.backgroundSecondary,
@@ -466,6 +470,15 @@ export const dashboardStyles = StyleSheet.create({
   clearIcon: {
     marginLeft: spacing.sm,
     padding: spacing.xs,
+  },
+  userSearchButton: {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: spacing.borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 48,
   },
   scrollContainer: {
     flex: 1,

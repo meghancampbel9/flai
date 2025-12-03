@@ -28,7 +28,7 @@ class EmbeddingService:
         """Get native Google AI vision model instance"""
         if self._vision_model is None:
             try:
-                self._vision_model = genai.GenerativeModel('gemini-1.5-flash')
+                self._vision_model = genai.GenerativeModel('gemini-2.5-flash-lite')
                 logger.info("✅ Native Google Vision model initialized")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Google Vision model: {e}")

@@ -136,14 +136,20 @@ export const ProfileScreen: React.FC = () => {
               <Text style={dashboardStyles.statNumber}>{closetItems.length}</Text>
               <Text style={dashboardStyles.statLabel}>Items</Text>
             </View>
-            <View style={dashboardStyles.statItem}>
-              <Text style={dashboardStyles.statNumber}>0</Text>
+            <TouchableOpacity 
+              style={dashboardStyles.statItem}
+              onPress={() => router.push(`/user-following?userId=${userProfile?.id}`)}
+            >
+              <Text style={dashboardStyles.statNumber}>{userProfile?.following_count || 0}</Text>
               <Text style={dashboardStyles.statLabel}>Following</Text>
-            </View>
-            <View style={dashboardStyles.statItem}>
-              <Text style={dashboardStyles.statNumber}>0</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={dashboardStyles.statItem}
+              onPress={() => router.push(`/user-followers?userId=${userProfile?.id}`)}
+            >
+              <Text style={dashboardStyles.statNumber}>{userProfile?.followers_count || 0}</Text>
               <Text style={dashboardStyles.statLabel}>Followers</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 

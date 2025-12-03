@@ -173,7 +173,7 @@ async def analyze_images_with_gemini(image_urls: List[str], board_name: str) -> 
         logger.info(f"🎨 Analyzing {len(analysis_images)} images with Gemini Vision API")
         
         # Create Gemini model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         # Prepare images for analysis concurrently
         async def fetch_image(url: str) -> Optional[dict]:

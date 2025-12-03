@@ -73,10 +73,11 @@ export const UsernameScreen: React.FC = () => {
     try {
       // Get user ID - either from session or dev mode
       let userId: string;
+      const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
       if (devMode === 'true') {
         console.log('🔧 Using dev mode authentication');
         setDevModeAuth();
-        userId = 'dev-user-id';
+        userId = DEV_USER_ID;
       } else if (session?.user?.id) {
         userId = session.user.id;
       } else {

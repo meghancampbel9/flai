@@ -14,6 +14,8 @@ from app.routers.users import router as users_router
 from app.routers.scraping import router as scraping_router
 from app.routers.products import router as products_router
 from app.routers import shop
+from app.routers.user_following import router as user_following_router
+from app.routers.styling import router as styling_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -156,6 +158,8 @@ app.include_router(users_router, prefix="/api/v1/users", tags=["Users & Profiles
 app.include_router(scraping_router, prefix="/api/v1/scraping", tags=["Web Scraping"])
 app.include_router(products_router, prefix="/api/v1/products", tags=["Products"])
 app.include_router(shop.router, prefix="/api/v1/shop", tags=["Shop"])
+app.include_router(user_following_router, prefix="/api/v1/users", tags=["User Following"])
+app.include_router(styling_router, prefix="/api/v1/styling", tags=["AI Styling & Virtual Try-On"])
 
 logger.info("✅ Routers loaded successfully")
 logger.info("🚀 Flai API v2.0.0 wih SQLAlchemy + Supabase ready!")
